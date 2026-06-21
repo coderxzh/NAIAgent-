@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import WeeklyDashboard from './components/WeeklyDashboard';
+import DashboardView from './components/dashboard/DashboardView';
 import {
   Search,
   Bell,
@@ -1107,11 +1107,7 @@ export default function App() {
               transition={{ duration: 0.3 }}
               className="flex-1 flex flex-col h-full"
             >
-              <WeeklyDashboard 
-                lang={lang} 
-                isDarkMode={isDarkMode} 
-                onNavigateToAgent={() => setActiveView('aiAgent')} 
-              />
+              <DashboardView />
             </motion.main>
           )}
           {activeView === 'aiAgent' && (

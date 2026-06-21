@@ -1,0 +1,36 @@
+export const i18n = {
+  zh: {
+    dashboard: '仪表盘',
+    aiAgent: '智能Agent',
+    drafts: '稿件管理',
+    autoLearning: '自动学习',
+    aiWebBuilder: 'AI网站构建',
+    teams: '企业',
+    settings: '设置',
+    logOut: '退出登录',
+    search: '搜索...',
+    greeting: '你好，GEO Agent',
+    chatPlaceholder: '描述你的 3D 对象或场景...',
+    newChat: '新对话',
+    emptyTitle: '暂无内容',
+    emptyDesc: '该功能将在后续阶段上线。',
+  },
+  en: {
+    dashboard: 'Dashboard',
+    aiAgent: 'AI Agent',
+    drafts: 'Drafts',
+    autoLearning: 'Auto Learning',
+    aiWebBuilder: 'AI Web Builder',
+    teams: 'Enterprise',
+    settings: 'Settings',
+    logOut: 'Log Out',
+    search: 'Search...',
+    greeting: 'Hello, GEO Agent',
+    chatPlaceholder: 'Describe your 3D object or scene...',
+    newChat: 'New Chat',
+    emptyTitle: 'No content yet',
+    emptyDesc: 'This feature will be available in a later phase.',
+  },
+};
+
+export type Lang = 'zh' | 'en';

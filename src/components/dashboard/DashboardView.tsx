@@ -25,7 +25,7 @@ export default function DashboardView() {
           {t.greeting}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          随时掌控 GEO 优化进度与企业知识库状态。
+          {t.dashboardSubtitle}
         </p>
       </div>
 
@@ -33,7 +33,7 @@ export default function DashboardView() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
-          <ActivityChart data={mockDashboardData.trend} />
+          <ActivityChart data={mockDashboardData.trend} loading={loading} />
         </div>
         <ActionItemsPanel items={mockDashboardData.actions} loading={loading} />
       </div>

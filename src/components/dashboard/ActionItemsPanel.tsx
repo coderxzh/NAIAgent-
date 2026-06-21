@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
 import { EmptyState } from '../ui/empty-state';
 import { useTheme } from '../../hooks/use-theme';
-import { CheckCircle2, Circle, AlertTriangle, AlertCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Circle, AlertTriangle, AlertCircle } from 'lucide-react';
 
 interface ActionItem {
   id: string;

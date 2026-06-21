@@ -1,13 +1,15 @@
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
+import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useTheme } from '../../hooks/use-theme';
 
 interface ActivityChartProps {
   data: { date: string; value: number }[];
+  loading?: boolean;
 }
 
-export default function ActivityChart({ data }: ActivityChartProps) {
+export default function ActivityChart({ data, loading }: ActivityChartProps) {
   const { isDarkMode, cls } = useTheme();
 
   const series = useMemo(
@@ -50,7 +52,11 @@ export default function ActivityChart({ data }: ActivityChartProps) {
       )}
     >
       <h3 className="text-sm font-bold mb-4">GEO 运行趋势</h3>
-      <Chart options={options} series={series} type="area" height={260} />
+      {loading ? (
+        <Skeleton className="h-[260px] rounded-2xl" />
+      ) : (
+        <Chart options={options} series={series} type="area" height={260} />
+      )}
     </div>
   );
 }

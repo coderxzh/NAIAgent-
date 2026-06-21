@@ -1,6 +1,8 @@
 import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
+import { EmptyState } from '../ui/empty-state';
 import { useTheme } from '../../hooks/use-theme';
+import { BarChart3 } from 'lucide-react';
 
 interface StatCardItem {
   label: string;
@@ -23,6 +25,14 @@ export default function StatCards({ stats, loading }: StatCardsProps) {
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-24 rounded-2xl" />
         ))}
+      </div>
+    );
+  }
+
+  if (stats.length === 0) {
+    return (
+      <div className={cn('rounded-2xl p-5 border transition-colors flex items-center justify-center min-h-[200px]', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
+        <EmptyState icon={<BarChart3 className="w-8 h-8" />} title="暂无统计数据" description="数据将在后续阶段提供。" />
       </div>
     );
   }

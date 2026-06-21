@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, FileText, BookOpen, Globe, LogOut, ChevronRight, Plus, ChevronDown, X } from 'lucide-react';
+import { LayoutDashboard, Settings, FileText, BookOpen, Globe, LogOut, ChevronRight, Plus, ChevronDown, X, PanelLeftClose } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useTheme } from '../../hooks/use-theme';
 import { useState } from 'react';
@@ -10,6 +10,8 @@ interface SidebarProps {
   onNavigate: (view: View) => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  mobileOpen: boolean;
+  onCloseMobile: () => void;
 }
 
 const mainMenu: { id: View; icon: React.ComponentType<{ className?: string }>; labelKey: 'dashboard' | 'aiAgent' | 'drafts' | 'autoLearning' | 'aiWebBuilder' }[] = [
@@ -32,12 +34,14 @@ const teamList = [
   { name: 'Customer Portal', color: '#2dd4bf' },
 ];
 
-export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCollapse }: SidebarProps) {
+export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SidebarProps) {
   const { t, cls, lang } = useTheme();
   const [isTeamsExpanded, setIsTeamsExpanded] = useState(true);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const closeMobile = () => setMobileOpen(false);
+  const handleNavigate = (id: View) => {
+    onNavigate(id);
+    onCloseMobile();
+  };
 
   return (
     <>
@@ -45,7 +49,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 xl:hidden"
-          onClick={closeMobile}
+          onClick={onCloseMobile}
         />
       )}
 
@@ -91,7 +95,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
               'xl:hidden p-2 rounded-full shrink-0',
               cls('hover:bg-gray-200/50 text-gray-700', 'hover:bg-zinc-800 text-zinc-300')
             )}
-            onClick={closeMobile}
+            onClick={onCloseMobile}
           >
             <X className="w-5 h-5" />
           </button>
@@ -109,10 +113,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
             {collapsed ? (
               <ChevronRight className="w-3.5 h-3.5" />
             ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="11 17 6 12 11 7" />
-                <polyline points="18 17 13 12 18 7" />
-              </svg>
+              <PanelLeftClose className="w-3.5 h-3.5" />
             )}
           </button>
         </div>
@@ -132,7 +133,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
               {mainMenu.map(({ id, icon: Icon, labelKey }) => (
                 <button
                   key={id}
-                  onClick={() => onNavigate(id)}
+                  onClick={() => handleNavigate(id)}
                   className={cn(
                     'flex items-center gap-3 px-3 py-2.5 w-full rounded-2xl font-bold text-[14px] transition-colors',
                     activeView === id

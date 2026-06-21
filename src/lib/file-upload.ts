@@ -25,13 +25,11 @@ export interface ChatMessage {
  * 根据文件名和 MIME 类型返回对应的图标组件、图标颜色以及背景/边框样式。
  * @param fileName - 文件名（含扩展名）
  * @param fileType - MIME 类型
- * @param isDarkMode - 当前是否为深色模式（用于 cls 拼接）
  * @param cls - 主题切换辅助函数
  */
 export function getFileIconAndColor(
   fileName: string,
   fileType: string,
-  isDarkMode: boolean,
   cls: (light: string, dark: string) => string
 ) {
   const ext = fileName.split('.').pop()?.toLowerCase();

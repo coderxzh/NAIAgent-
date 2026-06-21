@@ -29,7 +29,6 @@ import {
   X,
   ChevronDown,
   Mic,
-  ArrowUp,
   Check,
 } from 'lucide-react';
 import type { UploadedFile, ChatMessage } from '@/lib/file-upload';
@@ -89,6 +88,7 @@ export default function ChatInterface({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputAreaRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 欢迎语和建议 chip 数据
   const suggestions = [
@@ -101,7 +101,7 @@ export default function ChatInterface({
   // 模拟 AI 回复
   const simulateAIResponse = useCallback((userContent: string) => {
     setIsLoading(true);
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       const responses: Record<string, string> = {
         zh: `收到您的消息："${userContent.substring(0, 50)}${userContent.length > 50 ? '...' : ''}"
 
@@ -134,10 +134,17 @@ I'm Voxle, your personal AI assistant. I can help you with writing, programming,
       setMessages((prev) => [...prev, userMsg]);
       setInputText('');
 
+      // 清除已选文件
+      if (onFileUpload) {
+        onFileUpload([]);
+      } else {
+        setInternalFiles([]);
+      }
+
       // 模拟 AI 回复
       simulateAIResponse(text);
     },
-    [uploadedFiles.length, simulateAIResponse]
+    [uploadedFiles.length, simulateAIResponse, onFileUpload]
   );
 
   // 文件上传处理
@@ -197,7 +204,12 @@ I'm Voxle, your personal AI assistant. I can help you with writing, programming,
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, []);
 
   // 自动调整 textarea 高度
@@ -373,7 +385,7 @@ I'm Voxle, your personal AI assistant. I can help you with writing, programming,
             <AnimatePresence>
               {uploadedFiles.map((file) => {
                 const isImage = file.type.startsWith('image/');
-                const fileStyle = getFileIconAndColor(file.name, file.type, false, cls);
+                const fileStyle = getFileIconAndColor(file.name, file.type, cls);
                 return (
                   <motion.div
                     key={file.id}

@@ -91,6 +91,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
           </div>
 
           <button
+            aria-label={t.closeMenu ?? 'Close menu'}
             className={cn(
               'xl:hidden p-2 rounded-full shrink-0',
               cls('hover:bg-gray-200/50 text-gray-700', 'hover:bg-zinc-800 text-zinc-300')
@@ -101,6 +102,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
           </button>
 
           <button
+            aria-label={collapsed ? (t.expandSidebar ?? 'Expand sidebar') : (t.collapseSidebar ?? 'Collapse sidebar')}
             className={cn(
               'hidden xl:flex p-1.5 shrink-0 rounded-lg transition-colors shadow-xs absolute -right-[36px]',
               cls(
@@ -160,6 +162,10 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
           <div className={cn('flex-1 min-h-0 flex flex-col', collapsed ? 'xl:hidden' : '')}>
             <div
               onClick={() => setIsTeamsExpanded((v) => !v)}
+              aria-label={isTeamsExpanded ? (t.collapseTeams ?? 'Collapse team list') : (t.expandTeams ?? 'Expand team list')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsTeamsExpanded((v) => !v); } }}
               className={cn(
                 'shrink-0 cursor-pointer select-none flex items-center justify-between px-3.5 py-1.5 rounded-[14px] border transition-all mb-3',
                 cls(
@@ -179,6 +185,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
               </div>
               <button
                 onClick={(e) => e.stopPropagation()}
+                aria-label={t.addTeam ?? 'Add team'}
                 className={cn(
                   'w-6 h-6 rounded-full flex items-center justify-center transition-all',
                   cls(

@@ -10,7 +10,7 @@ interface ActivityChartProps {
 }
 
 export default function ActivityChart({ data, loading }: ActivityChartProps) {
-  const { isDarkMode, cls } = useTheme();
+  const { isDarkMode, cls, t } = useTheme();
 
   const series = useMemo(
     () => [{ name: 'GEO 运行', data: data.map((d) => d.value) }],
@@ -51,7 +51,7 @@ export default function ActivityChart({ data, loading }: ActivityChartProps) {
         cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5')
       )}
     >
-      <h3 className="text-sm font-bold mb-4">GEO 运行趋势</h3>
+      <h3 className="text-sm font-bold mb-4">{t.activityChartTitle ?? 'GEO 运行趋势'}</h3>
       {loading ? (
         <Skeleton className="h-[260px] rounded-2xl" />
       ) : (

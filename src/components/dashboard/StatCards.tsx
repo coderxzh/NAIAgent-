@@ -17,7 +17,7 @@ interface StatCardsProps {
 }
 
 export default function StatCards({ stats, loading }: StatCardsProps) {
-  const { cls } = useTheme();
+  const { cls, t } = useTheme();
 
   if (loading) {
     return (
@@ -32,7 +32,7 @@ export default function StatCards({ stats, loading }: StatCardsProps) {
   if (stats.length === 0) {
     return (
       <div className={cn('rounded-2xl p-5 border transition-colors flex items-center justify-center min-h-[200px]', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
-        <EmptyState icon={<BarChart3 className="w-8 h-8" />} title="暂无统计数据" description="数据将在后续阶段提供。" />
+        <EmptyState icon={<BarChart3 className="w-8 h-8" />} title={t.statCardsEmptyTitle ?? '暂无统计数据'} description={t.statCardsEmptyDesc ?? '数据将在后续阶段提供。'} />
       </div>
     );
   }

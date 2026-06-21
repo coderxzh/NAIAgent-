@@ -24,7 +24,7 @@ const typeConfig: Record<string, { icon: typeof Activity; color: string; bg: str
 };
 
 export default function RecentActivityFeed({ items, loading }: RecentActivityFeedProps) {
-  const { cls } = useTheme();
+  const { cls, t } = useTheme();
 
   if (loading) {
     return (
@@ -42,14 +42,14 @@ export default function RecentActivityFeed({ items, loading }: RecentActivityFee
   if (items.length === 0) {
     return (
       <div className={cn('rounded-2xl p-5 border transition-colors flex items-center justify-center min-h-[200px]', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
-        <EmptyState title="暂无活动记录" description="近期活动将在此显示。" />
+        <EmptyState title={t.recentActivityEmptyTitle ?? '暂无活动记录'} description={t.recentActivityEmptyDesc ?? '近期活动将在此显示。'} />
       </div>
     );
   }
 
   return (
     <div className={cn('rounded-2xl p-5 border transition-colors', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
-      <h3 className="text-sm font-bold mb-4">最近活动</h3>
+      <h3 className="text-sm font-bold mb-4">{t.recentActivityTitle ?? '最近活动'}</h3>
       <div className="space-y-3">
         {items.map((item) => {
           const config = typeConfig[item.type] || typeConfig.default;

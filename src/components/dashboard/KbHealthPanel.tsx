@@ -23,7 +23,7 @@ interface KbHealthPanelProps {
 }
 
 export default function KbHealthPanel({ health, assets, loading }: KbHealthPanelProps) {
-  const { cls } = useTheme();
+  const { cls, t, lang } = useTheme();
 
   if (loading) {
     return (
@@ -42,7 +42,7 @@ export default function KbHealthPanel({ health, assets, loading }: KbHealthPanel
   if (assets.length === 0) {
     return (
       <div className={cn('rounded-2xl p-5 border transition-colors flex items-center justify-center min-h-[200px]', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
-        <EmptyState title="知识库为空" description="上传文档以建立知识库索引。" />
+        <EmptyState title={t.kbHealthEmptyTitle ?? '知识库为空'} description={t.kbHealthEmptyDesc ?? '上传文档以建立知识库索引。'} />
       </div>
     );
   }
@@ -59,7 +59,7 @@ export default function KbHealthPanel({ health, assets, loading }: KbHealthPanel
   return (
     <div className={cn('rounded-2xl p-5 border transition-colors', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold">知识库健康度</h3>
+        <h3 className="text-sm font-bold">{t.kbHealthTitle ?? '知识库健康度'}</h3>
         <Database className={cn('w-4 h-4', cls('text-gray-400', 'text-zinc-500'))} />
       </div>
 
@@ -87,19 +87,19 @@ export default function KbHealthPanel({ health, assets, loading }: KbHealthPanel
         </div>
         <div>
           <p className={cn('text-sm font-bold', healthColor)}>
-            {health.health >= 80 ? '健康' : health.health >= 50 ? '一般' : '需关注'}
+            {health.health >= 80 ? (t.kbHealthStatusHealthy ?? '健康') : health.health >= 50 ? (t.kbHealthStatusFair ?? '一般') : (t.kbHealthStatusPoor ?? '需关注')}
           </p>
           <p className={cn('text-xs', cls('text-gray-500', 'text-zinc-400'))}>
-            {health.indexed} 已索引 / {health.pending} 待处理
+            {health.indexed} {t.kbHealthIndexed ?? '已索引'} / {health.pending} {t.kbHealthPending ?? '待处理'}
           </p>
         </div>
       </div>
 
       {/* Asset list */}
       <div className="space-y-2">
-        {assets.map((asset) => (
+        {assets.map((asset, index) => (
           <div
-            key={asset.name}
+            key={`${index}-${asset.name}`}
             className={cn(
               'flex items-center gap-3 p-2.5 rounded-xl transition-colors',
               cls('hover:bg-gray-50', 'hover:bg-white/5')
@@ -122,7 +122,7 @@ export default function KbHealthPanel({ health, assets, loading }: KbHealthPanel
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate">{asset.name}</p>
               <p className={cn('text-xs', cls('text-gray-500', 'text-zinc-400'))}>
-                {asset.words > 0 ? `${asset.words.toLocaleString()} 字` : '处理中...'}
+              {asset.words > 0 ? `${asset.words.toLocaleString()} ${lang === 'zh' ? '字' : 'words'}` : (lang === 'zh' ? '处理中...' : 'Processing...')}
               </p>
             </div>
             <span
@@ -133,7 +133,7 @@ export default function KbHealthPanel({ health, assets, loading }: KbHealthPanel
                   : 'bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400'
               )}
             >
-              {asset.status === 'indexed' ? '已索引' : '待处理'}
+              {asset.status === 'indexed' ? (t.kbHealthIndexed ?? '已索引') : (t.kbHealthPending ?? '待处理')}
             </span>
           </div>
         ))}

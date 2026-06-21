@@ -34,11 +34,11 @@ const quickActions = [
 ];
 
 export default function QuickStartCards() {
-  const { cls } = useTheme();
+  const { cls, t } = useTheme();
 
   return (
     <div className={cn('rounded-2xl p-5 border transition-colors', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
-      <h3 className="text-sm font-bold mb-4">快速开始</h3>
+      <h3 className="text-sm font-bold mb-4">{t.quickStartTitle ?? '快速开始'}</h3>
       <div className="space-y-3">
         {quickActions.map((action) => {
           const Icon = action.icon;

@@ -89,6 +89,7 @@ export default function ChatInterface({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputAreaRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const objectUrlsRef = useRef<Set<string>>(new Set());
 
   // 欢迎语和建议 chip 数据
   const suggestions = [
@@ -155,12 +156,16 @@ I'm Voxle, your personal AI assistant. I can help you with writing, programming,
 
       const newFiles: UploadedFile[] = Array.from(files).map((file) => {
         const isImage = file.type.startsWith('image/');
+        const url = isImage ? URL.createObjectURL(file) : undefined;
+        if (url) {
+          objectUrlsRef.current.add(url);
+        }
         return {
           id: Math.random().toString(36).substring(2, 9),
           name: file.name,
           size: formatFileSize(file.size),
           type: file.type,
-          url: isImage ? URL.createObjectURL(file) : undefined,
+          url,
         };
       });
 
@@ -180,19 +185,18 @@ I'm Voxle, your personal AI assistant. I can help you with writing, programming,
   // 移除文件
   const removeFile = useCallback(
     (id: string) => {
+      const fileToRemove = uploadedFiles.find((f) => f.id === id);
+      if (fileToRemove?.url) {
+        URL.revokeObjectURL(fileToRemove.url);
+        objectUrlsRef.current.delete(fileToRemove.url);
+      }
       if (onRemoveFile) {
         onRemoveFile(id);
       } else {
-        setInternalFiles((prev) => {
-          const fileToRemove = prev.find((f) => f.id === id);
-          if (fileToRemove?.url) {
-            URL.revokeObjectURL(fileToRemove.url);
-          }
-          return prev.filter((f) => f.id !== id);
-        });
+        setInternalFiles((prev) => prev.filter((f) => f.id !== id));
       }
     },
-    [onRemoveFile]
+    [onRemoveFile, uploadedFiles]
   );
 
   // 点击外部关闭菜单
@@ -209,6 +213,9 @@ I'm Voxle, your personal AI assistant. I can help you with writing, programming,
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      // 清理所有 object URLs
+      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      objectUrlsRef.current.clear();
     };
   }, []);
 

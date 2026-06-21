@@ -17,14 +17,14 @@ interface ActionItemsPanelProps {
   loading?: boolean;
 }
 
-const priorityConfig = {
-  high: { label: '高', color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-950/20', icon: AlertTriangle },
-  medium: { label: '中', color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/20', icon: AlertCircle },
-  low: { label: '低', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/20', icon: AlertCircle },
-};
+const priorityConfig = (lang: string) => ({
+  high: { label: lang === 'zh' ? '高' : 'High', color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-950/20', icon: AlertTriangle },
+  medium: { label: lang === 'zh' ? '中' : 'Medium', color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/20', icon: AlertCircle },
+  low: { label: lang === 'zh' ? '低' : 'Low', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/20', icon: AlertCircle },
+});
 
 export default function ActionItemsPanel({ items, loading }: ActionItemsPanelProps) {
-  const { cls } = useTheme();
+  const { cls, t, lang } = useTheme();
 
   if (loading) {
     return (
@@ -42,7 +42,7 @@ export default function ActionItemsPanel({ items, loading }: ActionItemsPanelPro
   if (items.length === 0) {
     return (
       <div className={cn('rounded-2xl p-5 border transition-colors flex items-center justify-center min-h-[200px]', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
-        <EmptyState title="暂无待办事项" description="所有任务已处理完毕。" />
+        <EmptyState title={t.actionEmptyTitle ?? '暂无待办事项'} description={t.actionEmptyDesc ?? '所有任务已处理完毕。'} />
       </div>
     );
   }
@@ -50,14 +50,14 @@ export default function ActionItemsPanel({ items, loading }: ActionItemsPanelPro
   return (
     <div className={cn('rounded-2xl p-5 border transition-colors', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold">待办事项</h3>
+        <h3 className="text-sm font-bold">{t.actionItemsTitle ?? '待办事项'}</h3>
         <span className={cn('text-xs font-semibold', cls('text-gray-400', 'text-zinc-500'))}>
-          {items.filter((i) => !i.done).length} 待处理
+          {items.filter((i) => !i.done).length} {t.actionItemsPending ?? '待处理'}
         </span>
       </div>
       <div className="space-y-3">
         {items.map((item) => {
-          const config = priorityConfig[item.priority];
+          const config = priorityConfig(lang)[item.priority];
           const PriorityIcon = config.icon;
           return (
             <div

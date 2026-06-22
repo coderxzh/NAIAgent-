@@ -8,7 +8,6 @@ import {
 import { useTheme } from '@/hooks/use-theme';
 import type { UploadedFile, ChatMessage } from '@/lib/file-upload';
 import { formatFileSize } from '@/lib/file-upload';
-import { teams } from '@/lib/teams';
 import WelcomeScreen from './WelcomeScreen';
 import EmptyChatState from './EmptyChatState';
 import MessageList from './MessageList';
@@ -33,8 +32,8 @@ export default function ChatInterface({
   onFileUpload,
   selectedTeam: externalSelectedTeam,
   onTeamChange,
-  teamList = teams.map((t) => t.name),
-  getTeamColor = (name: string) => teams.find((t) => t.name === name)?.color ?? '#F37021',
+  teamList = [],
+  getTeamColor = () => '#F37021',
   selectedModel: externalSelectedModel,
   onModelChange,
   modelList = ['豆包2.0', 'DeepSeek', 'Qwen3.5'],
@@ -45,7 +44,7 @@ export default function ChatInterface({
   const [isLoading, setIsLoading] = useState(false);
 
   const [internalFiles, setInternalFiles] = useState<UploadedFile[]>([]);
-  const [internalTeam, setInternalTeam] = useState(teams[0]?.name ?? '');
+  const [internalTeam, setInternalTeam] = useState(teamList[0] ?? '');
   const [internalModel, setInternalModel] = useState('豆包2.0');
 
   const uploadedFiles = externalFiles ?? internalFiles;

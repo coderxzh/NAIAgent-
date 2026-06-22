@@ -57,7 +57,31 @@ export const knowledgeBaseService = {
     ) as Promise<KnowledgeEntry[]>;
   },
 
-  async ingestText(kbId: number, title: string, content: string): Promise<number> {
+  async getEntriesByProject(projectId: number): Promise<KnowledgeEntry[]> {
+    return dbApi.query(
+      `SELECT e.id, e.kb_id, e.title, e.content, e.source_type, e.source_file_path, e.status, e.created_at
+       FROM knowledge_entries e
+       INNER JOIN knowledge_bases kb ON e.kb_id = kb.id
+       WHERE kb.project_id = ?
+       ORDER BY e.created_at DESC`,
+      [projectId],
+    ) as Promise<KnowledgeEntry[]>;
+  },
+
+  async ingestText(projectId: number, title: string, content: string): Promise<number> {
+    // 获取或创建默认知识库
+    const kbs = await this.getByProject(projectId);
+    let kbId: number;
+    if (kbs.length > 0) {
+      kbId = kbs[0].id;
+    } else {
+      kbId = await this.create({
+        project_id: projectId,
+        name: '默认知识库',
+        description: null,
+      });
+    }
+
     const result = await dbApi.exec(
       "INSERT INTO knowledge_entries (kb_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
       [kbId, title, content, 'text', null, 'pending'],
@@ -65,7 +89,20 @@ export const knowledgeBaseService = {
     return Number(result.lastInsertRowid);
   },
 
-  async ingestFile(kbId: number, title: string, filePath: string): Promise<number> {
+  async ingestFile(projectId: number, title: string, filePath: string): Promise<number> {
+    // 获取或创建默认知识库
+    const kbs = await this.getByProject(projectId);
+    let kbId: number;
+    if (kbs.length > 0) {
+      kbId = kbs[0].id;
+    } else {
+      kbId = await this.create({
+        project_id: projectId,
+        name: '默认知识库',
+        description: null,
+      });
+    }
+
     const result = await dbApi.exec(
       "INSERT INTO knowledge_entries (kb_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
       [kbId, title, null, 'file', filePath, 'pending'],

@@ -38,18 +38,13 @@ const quickActions = [
 export default function QuickStartCards() {
   const { cls, t } = useTheme();
   const { navigateTo } = useView();
-  const { currentProject, currentKnowledgeBase } = useAppState();
+  const { currentProject } = useAppState();
 
   const handleAction = (title: string) => {
     if (title === '更新知识库') {
-      if (currentProject && currentKnowledgeBase) {
-        // 已有项目和知识库，直接进入录入面板
-        navigateTo('kbIngest', { kbId: currentKnowledgeBase.id });
-      } else if (currentProject) {
-        // 有项目但没选知识库，进入知识库列表
-        navigateTo('kbList', { projectId: currentProject.id });
+      if (currentProject) {
+        navigateTo('kbIngest', { projectId: currentProject.id });
       } else {
-        // 没有项目，进入项目列表
         navigateTo('projectList');
       }
     }

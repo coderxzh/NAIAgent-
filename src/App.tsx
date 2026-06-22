@@ -6,30 +6,14 @@ import ChatInterface from './components/chat/ChatInterface';
 import PlaceholderView from './components/layout/PlaceholderView';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProjectList from './components/projects/ProjectList';
-import KbList from './components/knowledge-base/KbList';
 import KbIngestPanel from './components/knowledge-base/KbIngestPanel';
-import KbEntriesList from './components/knowledge-base/KbEntriesList';
 import type { View } from './types/domain';
 
-function KbListWrapper() {
+function KbIngestWrapper() {
   const { viewParams } = useView();
   const projectId = viewParams.projectId as number | undefined;
   if (!projectId) return <PlaceholderView />;
-  return <KbList projectId={projectId} />;
-}
-
-function KbIngestWrapper() {
-  const { viewParams, navigateTo } = useView();
-  const kbId = viewParams.kbId as number | undefined;
-  if (!kbId) return <PlaceholderView />;
-  return <KbIngestPanel kbId={kbId} onSuccess={() => navigateTo('kbEntries', { kbId })} />;
-}
-
-function KbEntriesWrapper() {
-  const { viewParams } = useView();
-  const kbId = viewParams.kbId as number | undefined;
-  if (!kbId) return <PlaceholderView />;
-  return <KbEntriesList kbId={kbId} />;
+  return <KbIngestPanel projectId={projectId} />;
 }
 
 const viewComponents: Record<View, React.ComponentType> = {
@@ -39,9 +23,7 @@ const viewComponents: Record<View, React.ComponentType> = {
   autoLearning: PlaceholderView,
   aiWebBuilder: PlaceholderView,
   projectList: ProjectList,
-  kbList: KbListWrapper,
   kbIngest: KbIngestWrapper,
-  kbEntries: KbEntriesWrapper,
 };
 
 export default function App() {

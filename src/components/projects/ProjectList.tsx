@@ -43,12 +43,7 @@ export default function ProjectList() {
 
   const handleSelect = (project: Project) => {
     setCurrentProject(project);
-    navigateTo('kbList', { projectId: project.id });
-  };
-
-  const handleCreateKb = (project: Project) => {
-    setCurrentProject(project);
-    navigateTo('kbList', { projectId: project.id });
+    navigateTo('kbIngest', { projectId: project.id });
   };
 
   if (loading) {
@@ -111,17 +106,15 @@ export default function ProjectList() {
           <Card
             key={project.id}
             className={cn(
-              'p-5 transition-all hover:shadow-md',
+              'p-5 transition-all hover:shadow-md cursor-pointer',
               cls('bg-white', 'bg-[#1c1c1f]'),
             )}
+            onClick={() => handleSelect(project)}
           >
             <div className="flex items-start justify-between">
-              <div
-                className="flex items-center gap-3 cursor-pointer flex-1"
-                onClick={() => handleSelect(project)}
-              >
+              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#F37021]/10 flex items-center justify-center">
-                  <Folder className="w-5 h-5 text-[#F37021]" />
+                  <BookOpen className="w-5 h-5 text-[#F37021]" />
                 </div>
                 <div>
                   <h3 className="font-bold text-sm">{project.name}</h3>
@@ -136,16 +129,6 @@ export default function ProjectList() {
                 </div>
               </div>
               <div className="flex gap-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCreateKb(project);
-                  }}
-                  className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/20 text-blue-500"
-                  title="创建知识库"
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

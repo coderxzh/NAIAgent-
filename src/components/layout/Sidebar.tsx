@@ -8,6 +8,7 @@ import { knowledgeBaseService } from '../../services/knowledgeBaseService';
 import { useAppState } from '../../context/AppStateContext';
 import { useView } from '../../context/ViewContext';
 import type { Project, KnowledgeBase, View } from '../../types/domain';
+import KbForm from '../knowledge-base/KbForm';
 
 interface SidebarProps {
   activeView: View;
@@ -35,6 +36,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
   const [projectKbs, setProjectKbs] = useState<Record<number, KnowledgeBase[]>>({});
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [isTeamsExpanded, setIsTeamsExpanded] = useState(true);
+  const [kbFormOpen, setKbFormOpen] = useState(false);
 
   useEffect(() => {
     setLoadingProjects(true);
@@ -64,16 +66,24 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
 
   const handleAddKb = () => {
     if (!currentProject) {
-      // 没有选中项目，导航到项目列表让用户先选项目
+      // 没有选中项目，提示用户先选择或创建项目
       navigateTo('projectList');
       return;
     }
-    // 选中了项目，导航到知识库列表，用户可以在那里创建
-    navigateTo('kbList', { projectId: currentProject.id });
+    // 有选中项目，打开创建知识库对话框
+    setKbFormOpen(true);
   };
 
   const handleToggleTeams = () => {
     setIsTeamsExpanded((v) => !v);
+  };
+
+  const handleKbFormSuccess = () => {
+    // 刷新知识库列表
+    if (currentProject) {
+      loadKbs(currentProject.id);
+    }
+    triggerRefreshProjects();
   };
 
   const handleNavigate = (id: View) => {
@@ -198,7 +208,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
 
           {/* Enterprise section */}
           <div className={cn('flex-1 min-h-0 flex flex-col', collapsed ? 'xl:hidden' : '')}>
-            {/* Header with expand/collapse */}
+            {/* Header with expand/collapse - NO navigation on click */}
             <div
               onClick={handleToggleTeams}
               aria-label={isTeamsExpanded ? (t.collapseTeams ?? 'Collapse team list') : (t.expandTeams ?? 'Expand team list')}
@@ -340,6 +350,16 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
           </button>
         </div>
       </aside>
+
+      {/* Knowledge Base Creation Dialog */}
+      {currentProject && (
+        <KbForm
+          open={kbFormOpen}
+          onOpenChange={setKbFormOpen}
+          projectId={currentProject.id}
+          onSuccess={handleKbFormSuccess}
+        />
+      )}
     </>
   );
 }

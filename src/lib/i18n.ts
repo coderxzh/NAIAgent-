@@ -137,8 +137,7 @@ export const i18n = {
     settingsLanguage: '语言',
     settingsDarkMode: '深色模式',
     settingsNotifications: '通知',
-    settingsGeneral: '通用',
-    settingsOther: '其他',
+    settingsDescription: '管理语言、主题、通知等应用偏好',
   },
   en: {
     dashboard: 'Dashboard',
@@ -278,8 +277,7 @@ export const i18n = {
     settingsLanguage: 'Language',
     settingsDarkMode: 'Dark mode',
     settingsNotifications: 'Notifications',
-    settingsGeneral: 'General',
-    settingsOther: 'Other',
+    settingsDescription: 'Manage language, theme, and notification preferences',
   },
 };
 

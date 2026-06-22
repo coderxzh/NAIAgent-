@@ -143,3 +143,11 @@
     @apply font-sans;
   }
 }
+
+.app-drag-region {
+  -webkit-app-region: drag;
+}
+
+.app-no-drag-region {
+  -webkit-app-region: no-drag;
+}

@@ -1,6 +1,7 @@
 import { Menu, Languages, Moon, Sun, Bell, Settings } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useTheme } from '../../hooks/use-theme';
+import { useAppState } from '../../context/AppStateContext';
 
 interface HeaderProps {
   onOpenMobileMenu: () => void;
@@ -8,6 +9,7 @@ interface HeaderProps {
 
 export default function Header({ onOpenMobileMenu }: HeaderProps) {
   const { isDarkMode, toggleDarkMode, lang, setLang, cls, t } = useTheme();
+  const { currentProject, currentKnowledgeBase } = useAppState();
 
   return (
     <header className="flex justify-between items-center mb-6">
@@ -23,6 +25,11 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
           <Menu className="w-6 h-6" />
         </button>
         <span className="text-sm font-medium text-muted-foreground">NAI Agent</span>
+        {currentProject && (
+          <span className="text-xs text-muted-foreground">
+            {currentProject.name}{currentKnowledgeBase ? ` / ${currentKnowledgeBase.name}` : ''}
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-3">
         <button

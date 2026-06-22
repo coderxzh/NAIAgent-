@@ -1,4 +1,4 @@
-import { Menu, Languages, Moon, Sun, Bell, Settings } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useTheme } from '../../hooks/use-theme';
 import { useAppState } from '../../context/AppStateContext';
@@ -8,8 +8,8 @@ interface HeaderProps {
 }
 
 export default function Header({ onOpenMobileMenu }: HeaderProps) {
-  const { isDarkMode, toggleDarkMode, lang, setLang, cls, t } = useTheme();
-  const { currentProject, currentKnowledgeBase } = useAppState();
+  const { cls, t } = useTheme();
+  const { currentProject } = useAppState();
 
   return (
     <header className="flex justify-between items-center mb-6">
@@ -24,52 +24,14 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
         >
           <Menu className="w-6 h-6" />
         </button>
-        <span className="text-sm font-medium text-muted-foreground">NAI Agent</span>
-        {currentProject && (
-          <span className="text-xs text-muted-foreground">
-            {currentProject.name}{currentKnowledgeBase ? ` / ${currentKnowledgeBase.name}` : ''}
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
-          aria-label={t.toggleLanguage ?? 'Toggle language'}
-          className={cn(
-            'p-3 rounded-full',
-            cls('bg-white text-gray-600', 'bg-[#18181b] text-gray-300')
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-muted-foreground">NAI Agent</span>
+          {currentProject && (
+            <span className="text-xs text-muted-foreground">
+              {currentProject.name}
+            </span>
           )}
-        >
-          <Languages className="h-5 w-5" />
-        </button>
-        <button
-          onClick={toggleDarkMode}
-          aria-label={t.toggleDarkMode ?? 'Toggle dark mode'}
-          className={cn(
-            'p-3 rounded-full',
-            cls('bg-white text-gray-600', 'bg-[#18181b] text-gray-300')
-          )}
-        >
-          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
-        <button
-          aria-label={t.notifications ?? 'Notifications'}
-          className={cn(
-            'p-3 rounded-full',
-            cls('bg-white text-gray-600', 'bg-[#18181b] text-gray-300')
-          )}
-        >
-          <Bell className="h-5 w-5" />
-        </button>
-        <button
-          aria-label={t.openSettings ?? 'Open settings'}
-          className={cn(
-            'p-3 rounded-full',
-            cls('bg-white text-gray-600', 'bg-[#18181b] text-gray-300')
-          )}
-        >
-          <Settings className="h-5 w-5" />
-        </button>
+        </div>
       </div>
     </header>
   );

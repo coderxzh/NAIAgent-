@@ -7,6 +7,7 @@ import { projectService } from '../../services/projectService';
 import { useAppState } from '../../context/AppStateContext';
 import { useView } from '../../context/ViewContext';
 import type { Project, View } from '../../types/domain';
+import SettingsSheet from './SettingsSheet';
 
 interface SidebarProps {
   activeView: View;
@@ -32,6 +33,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [isTeamsExpanded, setIsTeamsExpanded] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     setLoadingProjects(true);
@@ -266,6 +268,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
         {/* Footer */}
         <div className="mt-auto pt-8 flex flex-col gap-1">
           <button
+            onClick={() => setSettingsOpen(true)}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 w-full rounded-2xl font-bold text-[14px] transition-colors',
               cls('text-gray-500 hover:bg-gray-50', 'text-gray-400 hover:bg-white/5')
@@ -285,6 +288,8 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
           </button>
         </div>
       </aside>
+
+      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   );
 }

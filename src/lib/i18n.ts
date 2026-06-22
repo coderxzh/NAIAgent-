@@ -134,6 +134,11 @@ export const i18n = {
     selectModel: '选择模型',
     voiceInput: '语音输入',
     submit: '发送',
+    settingsLanguage: '语言',
+    settingsDarkMode: '深色模式',
+    settingsNotifications: '通知',
+    settingsGeneral: '通用',
+    settingsOther: '其他',
   },
   en: {
     dashboard: 'Dashboard',
@@ -270,6 +275,11 @@ export const i18n = {
     selectModel: 'Select model',
     voiceInput: 'Voice input',
     submit: 'Send',
+    settingsLanguage: 'Language',
+    settingsDarkMode: 'Dark mode',
+    settingsNotifications: 'Notifications',
+    settingsGeneral: 'General',
+    settingsOther: 'Other',
   },
 };
 

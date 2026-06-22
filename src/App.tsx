@@ -13,6 +13,10 @@ const viewComponents: Record<View, React.ComponentType> = {
   drafts: PlaceholderView,
   autoLearning: PlaceholderView,
   aiWebBuilder: PlaceholderView,
+  projectList: PlaceholderView,
+  kbList: PlaceholderView,
+  kbIngest: PlaceholderView,
+  kbEntries: PlaceholderView,
 };
 
 export default function App() {

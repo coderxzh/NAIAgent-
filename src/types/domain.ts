@@ -4,7 +4,11 @@ export type View =
   | 'aiAgent'
   | 'drafts'
   | 'autoLearning'
-  | 'aiWebBuilder';
+  | 'aiWebBuilder'
+  | 'projectList'
+  | 'kbList'
+  | 'kbIngest'
+  | 'kbEntries';
 
 // 通用状态枚举
 export type RunStatus = 'pending' | 'running' | 'completed' | 'failed';
@@ -31,6 +35,8 @@ export interface KnowledgeBase {
   created_at: string;
 }
 
+export type KnowledgeEntryStatus = 'pending' | 'indexed' | 'failed';
+
 // 知识库原始条目
 export interface KnowledgeEntry {
   id: number;
@@ -39,6 +45,7 @@ export interface KnowledgeEntry {
   content: string | null;
   source_type: string | null;
   source_file_path: string | null;
+  status: KnowledgeEntryStatus;
   created_at: string;
 }
 

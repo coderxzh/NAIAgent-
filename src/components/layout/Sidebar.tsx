@@ -73,7 +73,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
 
       <aside
         className={cn(
-          'fixed xl:static inset-y-0 left-0 z-50 h-full shrink-0 flex flex-col transition-all duration-300 ease-in-out border-r',
+          'fixed xl:static top-10 xl:top-0 inset-y-0 left-0 z-50 h-full shrink-0 flex flex-col transition-all duration-300 ease-in-out border-r',
           cls('bg-[#f5f6f8] border-gray-200/50', 'bg-[#18181c] border-zinc-800/50'),
           collapsed ? 'xl:w-[88px] xl:px-3' : 'xl:w-[260px] xl:px-6',
           'w-[280px] px-6 py-8 xl:py-10',

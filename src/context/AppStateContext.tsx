@@ -15,6 +15,8 @@ interface AppStateContextValue {
   setCurrentRun: (run: GeoRun | null) => void;
   currentChatSession: ChatSession | null;
   setCurrentChatSession: (session: ChatSession | null) => void;
+  refreshProjects: number;
+  triggerRefreshProjects: () => void;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
@@ -26,6 +28,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [currentRun, setCurrentRun] = useState<GeoRun | null>(null);
   const [currentChatSession, setCurrentChatSession] =
     useState<ChatSession | null>(null);
+  const [refreshProjects, setRefreshProjects] = useState(0);
 
   const value = useMemo<AppStateContextValue>(
     () => ({
@@ -37,8 +40,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setCurrentRun,
       currentChatSession,
       setCurrentChatSession,
+      refreshProjects,
+      triggerRefreshProjects: () => setRefreshProjects((v) => v + 1),
     }),
-    [currentProject, currentKnowledgeBase, currentRun, currentChatSession],
+    [currentProject, currentKnowledgeBase, currentRun, currentChatSession, refreshProjects],
   );
 
   return (

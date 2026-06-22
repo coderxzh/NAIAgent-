@@ -1,4 +1,4 @@
-import {app, ipcMain, dialog} from 'electron';
+import {app, ipcMain, dialog, BrowserWindow} from 'electron';
 import {getDb} from '../db/connection.ts';
 import {runMigrations} from '../db/migrations.ts';
 import {
@@ -8,6 +8,12 @@ import {
   VectorSearchSchema,
 } from './schemas.ts';
 import type {IpcChannels} from './channels.ts';
+
+let mainWindow: BrowserWindow | null = null;
+
+export function setMainWindow(win: BrowserWindow | null) {
+  mainWindow = win;
+}
 
 function createHandler<T extends keyof IpcChannels>(
   channel: T,
@@ -71,5 +77,33 @@ export function registerIpcHandlers() {
   createHandler('app:getPath', (name) => {
     const validated = AppPathSchema.parse(name);
     return app.getPath(validated);
+  });
+
+  createHandler('window:minimize', () => {
+    mainWindow?.minimize();
+  });
+
+  createHandler('window:maximize', () => {
+    if (mainWindow?.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow?.maximize();
+    }
+  });
+
+  createHandler('window:unmaximize', () => {
+    mainWindow?.unmaximize();
+  });
+
+  createHandler('window:close', () => {
+    mainWindow?.close();
+  });
+
+  createHandler('window:isMaximized', () => {
+    return mainWindow?.isMaximized() ?? false;
+  });
+
+  createHandler('window:platform', () => {
+    return process.platform;
   });
 }

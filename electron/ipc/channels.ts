@@ -16,4 +16,11 @@ export interface IpcChannels {
   }) => string[];
 
   'app:getPath': (name: 'userData' | 'home' | 'downloads') => string;
+
+  'window:minimize': () => void;
+  'window:maximize': () => void;
+  'window:unmaximize': () => void;
+  'window:close': () => void;
+  'window:isMaximized': () => boolean;
+  'window:platform': () => NodeJS.Platform;
 }

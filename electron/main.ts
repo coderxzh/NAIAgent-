@@ -1,7 +1,7 @@
 import {app, BrowserWindow, Menu} from 'electron';
 import {join} from 'node:path';
 import {setApp} from './utils/paths.ts';
-import {registerIpcHandlers} from './ipc/handlers.ts';
+import {registerIpcHandlers, setMainWindow} from './ipc/handlers.ts';
 
 declare const __dirname: string;
 
@@ -29,6 +29,8 @@ function createWindow() {
       : {frame: false, titleBarStyle: 'hidden'}),
   });
 
+  setMainWindow(mainWindow);
+
   // Remove the default File/Edit/View/Window/Help menu
   Menu.setApplicationMenu(null);
 
@@ -39,8 +41,17 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, '../../dist/index.html'));
   }
 
+  mainWindow.on('maximize', () => {
+    mainWindow?.webContents.send('window:maximized-change', true);
+  });
+
+  mainWindow.on('unmaximize', () => {
+    mainWindow?.webContents.send('window:maximized-change', false);
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
+    setMainWindow(null);
   });
 }
 

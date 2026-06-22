@@ -7,7 +7,6 @@ import { projectService } from '../../services/projectService';
 import { useAppState } from '../../context/AppStateContext';
 import { useView } from '../../context/ViewContext';
 import type { Project, View } from '../../types/domain';
-import ProjectForm from '../projects/ProjectForm';
 
 interface SidebarProps {
   activeView: View;
@@ -28,12 +27,11 @@ const mainMenu: { id: View; icon: React.ComponentType<{ className?: string }>; l
 
 export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SidebarProps) {
   const { t, cls, lang } = useTheme();
-  const { currentProject, setCurrentProject, refreshProjects, triggerRefreshProjects } = useAppState();
+  const { currentProject, setCurrentProject, refreshProjects } = useAppState();
   const { navigateTo } = useView();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [isTeamsExpanded, setIsTeamsExpanded] = useState(true);
-  const [projectFormOpen, setProjectFormOpen] = useState(false);
 
   useEffect(() => {
     setLoadingProjects(true);
@@ -49,15 +47,11 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
   };
 
   const handleAddProject = () => {
-    setProjectFormOpen(true);
+    navigateTo('kbCreate');
   };
 
   const handleToggleTeams = () => {
     setIsTeamsExpanded((v) => !v);
-  };
-
-  const handleProjectFormSuccess = () => {
-    triggerRefreshProjects();
   };
 
   const handleNavigate = (id: View) => {
@@ -291,13 +285,6 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
           </button>
         </div>
       </aside>
-
-      {/* Project Creation Dialog */}
-      <ProjectForm
-        open={projectFormOpen}
-        onOpenChange={setProjectFormOpen}
-        onSuccess={handleProjectFormSuccess}
-      />
     </>
   );
 }

@@ -7,6 +7,7 @@ import PlaceholderView from './components/layout/PlaceholderView';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProjectList from './components/projects/ProjectList';
 import KbIngestPanel from './components/knowledge-base/KbIngestPanel';
+import KbCreateView from './components/knowledge-base/KbCreateView';
 import type { View } from './types/domain';
 
 function KbIngestWrapper() {
@@ -24,6 +25,7 @@ const viewComponents: Record<View, React.ComponentType> = {
   aiWebBuilder: PlaceholderView,
   projectList: ProjectList,
   kbIngest: KbIngestWrapper,
+  kbCreate: KbCreateView,
 };
 
 export default function App() {

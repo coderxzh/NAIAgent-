@@ -6,7 +6,8 @@ export type View =
   | 'autoLearning'
   | 'aiWebBuilder'
   | 'projectList'
-  | 'kbIngest';
+  | 'kbIngest'
+  | 'kbCreate';
 
 // 通用状态枚举
 export type RunStatus = 'pending' | 'running' | 'completed' | 'failed';

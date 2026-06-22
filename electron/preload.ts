@@ -16,21 +16,20 @@ const api = {
       ipcRenderer.removeListener(channel, handler);
     };
   },
-};
 
-const windowControls = {
-  minimize: () => ipcRenderer.invoke('window:minimize'),
-  maximize: () => ipcRenderer.invoke('window:maximize'),
-  unmaximize: () => ipcRenderer.invoke('window:unmaximize'),
-  close: () => ipcRenderer.invoke('window:close'),
-  isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
-  platform: () => ipcRenderer.invoke('window:platform'),
-  onMaximizedChange: (callback: (isMaximized: boolean) => void) => {
-    const handler = (_event: unknown, isMaximized: boolean) => callback(isMaximized);
-    ipcRenderer.on('window:maximized-change', handler);
-    return () => ipcRenderer.removeListener('window:maximized-change', handler);
+  windowControls: {
+    minimize: () => ipcRenderer.invoke('window:minimize'),
+    maximize: () => ipcRenderer.invoke('window:maximize'),
+    unmaximize: () => ipcRenderer.invoke('window:unmaximize'),
+    close: () => ipcRenderer.invoke('window:close'),
+    isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+    platform: () => ipcRenderer.invoke('window:platform'),
+    onMaximizedChange: (callback: (isMaximized: boolean) => void) => {
+      const handler = (_event: unknown, isMaximized: boolean) => callback(isMaximized);
+      ipcRenderer.on('window:maximized-change', handler);
+      return () => ipcRenderer.removeListener('window:maximized-change', handler);
+    },
   },
 };
 
-contextBridge.exposeInMainWorld('electronAPI', api);
-contextBridge.exposeInMainWorld('windowControls', windowControls);
+contextBridge.exposeInMainWorld('electron', api);

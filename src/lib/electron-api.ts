@@ -5,11 +5,11 @@ export const api = {
     channel: T,
     ...args: Parameters<IpcChannels[T]>
   ): Promise<ReturnType<IpcChannels[T]>> => {
-    return window.electronAPI.invoke(channel, ...args);
+    return window.electron.invoke(channel, ...args);
   },
 
   on: (channel: string, callback: (...args: unknown[]) => void) => {
-    return window.electronAPI.on(channel, callback);
+    return window.electron.on(channel, callback);
   },
 };
 

@@ -1,10 +1,11 @@
-import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useView } from './context/ViewContext';
 import LayoutShell from './components/layout/LayoutShell';
 import DashboardView from './components/dashboard/DashboardView';
 import ChatInterface from './components/chat/ChatInterface';
 import PlaceholderView from './components/layout/PlaceholderView';
-import type { View } from './components/layout/Sidebar';
+import ErrorBoundary from './components/ErrorBoundary';
+import type { View } from './types/domain';
 
 const viewComponents: Record<View, React.ComponentType> = {
   dashboard: DashboardView,
@@ -15,12 +16,12 @@ const viewComponents: Record<View, React.ComponentType> = {
 };
 
 export default function App() {
-  const [activeView, setActiveView] = useState<View>('dashboard');
+  const { activeView } = useView();
 
   const ActiveComponent = viewComponents[activeView];
 
   return (
-    <LayoutShell activeView={activeView} onNavigate={setActiveView}>
+    <LayoutShell>
       <AnimatePresence mode="wait">
         <motion.div
           key={activeView}
@@ -30,7 +31,9 @@ export default function App() {
           transition={{ duration: 0.3 }}
           className="flex-1"
         >
-          <ActiveComponent />
+          <ErrorBoundary>
+            <ActiveComponent />
+          </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
     </LayoutShell>

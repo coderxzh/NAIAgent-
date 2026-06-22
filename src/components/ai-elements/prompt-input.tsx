@@ -37,6 +37,7 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -509,6 +510,8 @@ export type PromptInputProps = Omit<
     message: PromptInputMessage,
     event: FormEvent<HTMLFormElement>
   ) => void | Promise<void>;
+  /** ClassName applied to the inner InputGroup wrapper */
+  inputGroupClassName?: string;
 };
 
 export const PromptInput = ({
@@ -521,6 +524,7 @@ export const PromptInput = ({
   maxFileSize,
   onError,
   onSubmit,
+  inputGroupClassName,
   children,
   ...props
 }: PromptInputProps) => {
@@ -921,7 +925,7 @@ export const PromptInput = ({
         ref={formRef}
         {...props}
       >
-        <InputGroup className="overflow-hidden">{children}</InputGroup>
+        <InputGroup className={cn("overflow-hidden", inputGroupClassName)}>{children}</InputGroup>
       </form>
     </>
   );
@@ -1154,15 +1158,17 @@ export const PromptInputButton = ({
   const side = typeof tooltip === "string" ? "top" : (tooltip.side ?? "top");
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent side={side}>
-        {tooltipContent}
-        {shortcut && (
-          <span className="ml-2 text-muted-foreground">{shortcut}</span>
-        )}
-      </TooltipContent>
-    </Tooltip>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent side={side}>
+          {tooltipContent}
+          {shortcut && (
+            <span className="ml-2 text-muted-foreground">{shortcut}</span>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 

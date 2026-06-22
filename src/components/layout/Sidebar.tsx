@@ -2,8 +2,8 @@ import { LayoutDashboard, Settings, FileText, BookOpen, Globe, LogOut, ChevronRi
 import { cn } from '../../lib/utils';
 import { useTheme } from '../../hooks/use-theme';
 import { useState } from 'react';
-
-export type View = 'dashboard' | 'aiAgent' | 'drafts' | 'autoLearning' | 'aiWebBuilder';
+import type { View } from '../../types/domain';
+import { teams } from '../../lib/teams';
 
 interface SidebarProps {
   activeView: View;
@@ -22,17 +22,6 @@ const mainMenu: { id: View; icon: React.ComponentType<{ className?: string }>; l
   { id: 'aiWebBuilder', icon: Globe, labelKey: 'aiWebBuilder' },
 ];
 
-const teamList = [
-  { name: 'Thorafodi Web App', color: '#F37021' },
-  { name: 'Corbe Mobile Application', color: '#f97316' },
-  { name: 'Abuss Clothing Shop', color: '#2dd4bf' },
-  { name: 'Bimjet Crypto Dashboard', color: '#3b82f6' },
-  { name: 'Marketing', color: '#ef4444' },
-  { name: 'Development', color: '#2dd4bf' },
-  { name: 'Design System', color: '#f97316' },
-  { name: 'Analytics Platform', color: '#7dd3fc' },
-  { name: 'Customer Portal', color: '#2dd4bf' },
-];
 
 export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SidebarProps) {
   const { t, cls, lang } = useTheme();
@@ -204,7 +193,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 <nav className="flex flex-col gap-1 pb-4">
-                  {teamList.map((team) => (
+                  {teams.map((team) => (
                     <button
                       key={team.name}
                       className={cn(

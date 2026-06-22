@@ -1,5 +1,7 @@
 import { cn } from '@/lib/utils';
 import { useTheme } from '../../hooks/use-theme';
+import { useView } from '../../context/ViewContext';
+import { useAppState } from '../../context/AppStateContext';
 import { FileText, BookOpen, Globe, Sparkles } from 'lucide-react';
 
 const quickActions = [
@@ -35,6 +37,18 @@ const quickActions = [
 
 export default function QuickStartCards() {
   const { cls, t } = useTheme();
+  const { navigateTo } = useView();
+  const { currentProject, currentKnowledgeBase } = useAppState();
+
+  const handleAction = (title: string) => {
+    if (title === '更新知识库') {
+      if (currentProject && currentKnowledgeBase) {
+        navigateTo('kbIngest', { kbId: currentKnowledgeBase.id });
+      } else {
+        navigateTo('projectList');
+      }
+    }
+  };
 
   return (
     <div className={cn('rounded-2xl p-5 border transition-colors', cls('bg-white border-gray-100', 'bg-[#1c1c1f] border-white/5'))}>
@@ -45,6 +59,7 @@ export default function QuickStartCards() {
           return (
             <button
               key={action.title}
+              onClick={() => handleAction(action.title)}
               className={cn(
                 'w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
                 cls(

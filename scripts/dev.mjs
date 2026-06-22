@@ -20,7 +20,10 @@ function startElectron() {
   const env = {...process.env};
   delete env.ELECTRON_RUN_AS_NODE;
 
-  electronProcess = spawn('electron', ['dist-electron/main/main.cjs'], {
+  const electronPath = process.platform === 'win32'
+    ? 'node_modules/electron/cli.js'
+    : 'node_modules/.bin/electron';
+  electronProcess = spawn('node', [electronPath, 'dist-electron/main/main.cjs'], {
     env: {
       ...env,
       VITE_DEV_SERVER_URL,

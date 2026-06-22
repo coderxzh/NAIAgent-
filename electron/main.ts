@@ -1,4 +1,4 @@
-import {app, BrowserWindow} from 'electron';
+import {app, BrowserWindow, Menu} from 'electron';
 import {join} from 'node:path';
 import {setApp} from './utils/paths.ts';
 import {registerIpcHandlers} from './ipc/handlers.ts';
@@ -8,6 +8,8 @@ declare const __dirname: string;
 setApp(app);
 
 let mainWindow: BrowserWindow | null;
+
+const isMac = process.platform === 'darwin';
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -21,8 +23,14 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: true,
     },
-    titleBarStyle: 'hiddenInset',
+    // macOS keeps traffic lights; Windows/Linux use frameless custom title bar
+    ...(isMac
+      ? {titleBarStyle: 'hiddenInset'}
+      : {frame: false, titleBarStyle: 'hidden'}),
   });
+
+  // Remove the default File/Edit/View/Window/Help menu
+  Menu.setApplicationMenu(null);
 
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);

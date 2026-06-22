@@ -15,7 +15,7 @@ export const api = {
 
 export const dbApi = {
   query: (sql: string, params?: unknown[]) => api.invoke('db:query', sql, params),
-  exec: (sql: string) => api.invoke('db:exec', sql),
+  exec: (sql: string, params?: unknown[]) => api.invoke('db:exec', sql, params),
   migrate: () => api.invoke('db:migrate'),
   vectorSearch: (table: string, queryVector: number[], limit = 10) =>
     api.invoke('db:vectorSearch', {table, queryVector, limit}),

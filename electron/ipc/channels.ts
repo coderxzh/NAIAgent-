@@ -2,7 +2,7 @@ export interface IpcChannels {
   ping: () => 'pong';
 
   'db:query': (sql: string, params?: unknown[]) => unknown[];
-  'db:exec': (sql: string) => {changes: number; lastInsertRowid: number | bigint};
+  'db:exec': (sql: string, params?: unknown[]) => {changes: number; lastInsertRowid: number | bigint};
   'db:migrate': () => {currentVersion: number; targetVersion: number};
   'db:vectorSearch': (params: {
     table: string;

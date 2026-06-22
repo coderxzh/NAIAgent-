@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -20,35 +20,35 @@ import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
 import { Globe, Moon, Bell, Settings, Sparkles } from 'lucide-react';
 
-interface SettingsSheetProps {
+interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export default function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
+export default function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { t, isDarkMode, toggleDarkMode, lang, setLang, cls } = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[360px] sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent overlayClassName="bg-black/30" className="sm:max-w-[480px] p-0 gap-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-4">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold">
             <Settings className="w-5 h-5" />
             {t.settings ?? '设置'}
-          </SheetTitle>
-          <SheetDescription>
+          </DialogTitle>
+          <DialogDescription>
             管理语言、主题、通知等应用偏好
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <Tabs defaultValue="general" className="mt-4">
+        <Tabs defaultValue="general" className="px-6 pb-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="general">{t.settingsGeneral ?? '通用'}</TabsTrigger>
             <TabsTrigger value="other">{t.settingsOther ?? '其他'}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="general" className="space-y-4 mt-4">
+          <TabsContent value="general" className="space-y-1 mt-4">
             {/* Language */}
             <div
               className={cn(
@@ -143,7 +143,7 @@ export default function SettingsSheet({ open, onOpenChange }: SettingsSheetProps
             </div>
           </TabsContent>
         </Tabs>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

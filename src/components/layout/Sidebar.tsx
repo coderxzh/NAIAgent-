@@ -7,7 +7,7 @@ import { projectService } from '../../services/projectService';
 import { useAppState } from '../../context/AppStateContext';
 import { useView } from '../../context/ViewContext';
 import type { Project, View } from '../../types/domain';
-import SettingsSheet from './SettingsSheet';
+import SettingsDialog from './SettingsDialog';
 
 interface SidebarProps {
   activeView: View;
@@ -289,7 +289,7 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
         </div>
       </aside>
 
-      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   );
 }

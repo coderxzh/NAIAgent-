@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useView } from './context/ViewContext';
+import { Toaster } from '@/components/ui/sonner';
 import LayoutShell from './components/layout/LayoutShell';
 import DashboardView from './components/dashboard/DashboardView';
 import ChatInterface from './components/chat/ChatInterface';
@@ -48,6 +49,7 @@ export default function App() {
           </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
+      <Toaster />
     </LayoutShell>
   );
 }

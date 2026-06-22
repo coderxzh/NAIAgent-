@@ -22,10 +22,7 @@ import {
   MapPin,
   Tag,
   Briefcase,
-  Quote,
-  Calendar,
   Phone,
-  Users,
   Trash2,
 } from 'lucide-react';
 
@@ -43,10 +40,7 @@ const formFields = [
   { key: 'industry', label: '所属行业', icon: Briefcase, placeholder: '如：电子商务、云计算、人工智能' },
   { key: 'keywords', label: '关键词', icon: Tag, placeholder: '如：B2B、跨境电商、数字贸易' },
   { key: 'mainBusiness', label: '主营业务', icon: Briefcase, placeholder: '如：电商平台、云服务、金融科技' },
-  { key: 'slogan', label: '品牌口号', icon: Quote, placeholder: '如：让天下没有难做的生意' },
-  { key: 'foundedAt', label: '成立时间', icon: Calendar, placeholder: '如：1999年' },
   { key: 'contact', label: '联系方式', icon: Phone, placeholder: '如：400-800-8888' },
-  { key: 'targetAudience', label: '目标受众', icon: Users, placeholder: '如：中小企业、品牌商家' },
 ];
 
 const mockFacts: EnterpriseFact[] = [
@@ -55,8 +49,7 @@ const mockFacts: EnterpriseFact[] = [
   { id: '3', field: 'industry', label: '所属行业', value: '电子商务、云计算、数字媒体及娱乐', source: '公司介绍.pdf' },
   { id: '4', field: 'keywords', label: '关键词', value: 'B2B、跨境电商、云计算、数字支付', source: '公司介绍.pdf' },
   { id: '5', field: 'mainBusiness', label: '主营业务', value: '淘宝、天猫、阿里云、菜鸟网络、蚂蚁集团', source: '公司介绍.pdf' },
-  { id: '6', field: 'slogan', label: '品牌口号', value: '让天下没有难做的生意', source: '公司介绍.pdf' },
-  { id: '7', field: 'foundedAt', label: '成立时间', value: '1999年', source: '公司介绍.pdf' },
+  { id: '6', field: 'contact', label: '联系方式', value: '400-800-8888', source: '公司介绍.pdf' },
 ];
 
 export default function KbCreateView() {

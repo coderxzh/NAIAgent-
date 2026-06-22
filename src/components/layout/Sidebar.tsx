@@ -1,9 +1,13 @@
 import { LayoutDashboard, Settings, FileText, BookOpen, Globe, LogOut, ChevronRight, Plus, ChevronDown, X, PanelLeftClose } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from '../../hooks/use-theme';
-import { useState } from 'react';
-import type { View } from '../../types/domain';
-import { teams } from '../../lib/teams';
+import { useEffect, useState } from 'react';
+import { projectService } from '../../services/projectService';
+import { knowledgeBaseService } from '../../services/knowledgeBaseService';
+import { useAppState } from '../../context/AppStateContext';
+import { useView } from '../../context/ViewContext';
+import type { Project, KnowledgeBase, View } from '../../types/domain';
 
 interface SidebarProps {
   activeView: View;
@@ -22,10 +26,44 @@ const mainMenu: { id: View; icon: React.ComponentType<{ className?: string }>; l
   { id: 'aiWebBuilder', icon: Globe, labelKey: 'aiWebBuilder' },
 ];
 
-
 export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SidebarProps) {
   const { t, cls, lang } = useTheme();
-  const [isTeamsExpanded, setIsTeamsExpanded] = useState(true);
+  const { currentProject, setCurrentProject, currentKnowledgeBase, setCurrentKnowledgeBase, refreshProjects } = useAppState();
+  const { navigateTo } = useView();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [expandedProjectId, setExpandedProjectId] = useState<number | null>(currentProject?.id ?? null);
+  const [projectKbs, setProjectKbs] = useState<Record<number, KnowledgeBase[]>>({});
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
+  useEffect(() => {
+    setLoadingProjects(true);
+    projectService.getAll().then((data) => {
+      setProjects(data);
+      setLoadingProjects(false);
+    });
+  }, [refreshProjects]);
+
+  const loadKbs = async (projectId: number) => {
+    const kbs = await knowledgeBaseService.getByProject(projectId);
+    setProjectKbs((prev) => ({ ...prev, [projectId]: kbs }));
+  };
+
+  const handleProjectClick = async (project: Project) => {
+    setCurrentProject(project);
+    if (expandedProjectId === project.id) {
+      setExpandedProjectId(null);
+    } else {
+      setExpandedProjectId(project.id);
+      if (!projectKbs[project.id]) {
+        await loadKbs(project.id);
+      }
+    }
+  };
+
+  const handleKbClick = (kb: KnowledgeBase) => {
+    setCurrentKnowledgeBase(kb);
+    navigateTo('kbEntries', { kbId: kb.id });
+  };
 
   const handleNavigate = (id: View) => {
     onNavigate(id);
@@ -147,14 +185,9 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
             </nav>
           </div>
 
-          {/* Teams section */}
+          {/* Projects section */}
           <div className={cn('flex-1 min-h-0 flex flex-col', collapsed ? 'xl:hidden' : '')}>
             <div
-              onClick={() => setIsTeamsExpanded((v) => !v)}
-              aria-label={isTeamsExpanded ? (t.collapseTeams ?? 'Collapse team list') : (t.expandTeams ?? 'Expand team list')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsTeamsExpanded((v) => !v); } }}
               className={cn(
                 'shrink-0 cursor-pointer select-none flex items-center justify-between px-3.5 py-1.5 rounded-[14px] border transition-all mb-3',
                 cls(
@@ -164,17 +197,11 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
               )}
             >
               <div className="flex items-center gap-2">
-                <ChevronDown
-                  className={cn(
-                    'w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-300',
-                    isTeamsExpanded ? '' : '-rotate-90'
-                  )}
-                />
                 <span className="text-[13px] font-extrabold tracking-tight">{t.teams}</span>
               </div>
               <button
-                onClick={(e) => e.stopPropagation()}
-                aria-label={t.addTeam ?? 'Add team'}
+                onClick={(e) => { e.stopPropagation(); navigateTo('projectList'); }}
+                aria-label={t.addProject}
                 className={cn(
                   'w-6 h-6 rounded-full flex items-center justify-center transition-all',
                   cls(
@@ -187,35 +214,81 @@ export default function Sidebar({ activeView, onNavigate, collapsed, onToggleCol
               </button>
             </div>
 
-            {isTeamsExpanded && (
-              <div
-                className="overflow-y-auto min-h-0 flex-1 mt-2"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
+            <div
+              className="overflow-y-auto min-h-0 flex-1 mt-2"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {loadingProjects ? (
+                <div className="px-3 space-y-2">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              ) : (
                 <nav className="flex flex-col gap-1 pb-4">
-                  {teams.map((team) => (
-                    <button
-                      key={team.name}
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-2.5 w-full rounded-2xl font-bold text-[14px] transition-colors',
-                        cls(
-                          'border border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50',
-                          'border border-transparent text-gray-400 hover:text-white hover:bg-white/5'
-                        )
+                  {projects.map((project) => (
+                    <div key={project.id}>
+                      <button
+                        onClick={() => handleProjectClick(project)}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2.5 w-full rounded-2xl font-bold text-[14px] transition-colors',
+                          currentProject?.id === project.id
+                            ? cls(
+                                'bg-white shadow-xs border border-gray-200/50 text-gray-900',
+                                'bg-[#1c1c1f] border border-white/5 text-white'
+                              )
+                            : cls(
+                                'border border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50',
+                                'border border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                              )
+                        )}
+                      >
+                        <ChevronDown
+                          className={cn(
+                            'w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-300 shrink-0',
+                            expandedProjectId === project.id ? '' : '-rotate-90'
+                          )}
+                        />
+                        <span className={cn('truncate text-left flex-1', collapsed ? 'xl:hidden' : 'block')}>
+                          {project.name}
+                        </span>
+                      </button>
+                      {expandedProjectId === project.id && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {projectKbs[project.id]?.map((kb) => (
+                            <button
+                              key={kb.id}
+                              onClick={() => handleKbClick(kb)}
+                              className={cn(
+                                'flex items-center gap-2 px-3 py-2 w-full rounded-xl text-[13px] font-medium transition-colors',
+                                currentKnowledgeBase?.id === kb.id
+                                  ? cls('bg-gray-100 text-gray-900', 'bg-zinc-800 text-white')
+                                  : cls(
+                                      'text-gray-500 hover:text-gray-800 hover:bg-gray-50',
+                                      'text-gray-400 hover:text-white hover:bg-white/5'
+                                    )
+                              )}
+                            >
+                              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate text-left flex-1">{kb.name}</span>
+                            </button>
+                          ))}
+                          {projectKbs[project.id]?.length === 0 && (
+                            <p className={cn('px-3 text-xs', cls('text-gray-400', 'text-zinc-500'))}>
+                              暂无知识库
+                            </p>
+                          )}
+                        </div>
                       )}
-                    >
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: team.color }}
-                      />
-                      <span className={cn('truncate text-left flex-1', collapsed ? 'xl:hidden' : 'block')}>
-                        {team.name}
-                      </span>
-                    </button>
+                    </div>
                   ))}
+                  {projects.length === 0 && (
+                    <p className={cn('px-3 text-xs', cls('text-gray-400', 'text-zinc-500'))}>
+                      点击 + 添加项目
+                    </p>
+                  )}
                 </nav>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

@@ -37,10 +37,11 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
 );
 
 -- knowledge_chunk_vectors: 向量表（sqlite-vec 虚拟表）
-CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_chunk_vectors USING vec0(
-  chunk_id INTEGER,
-  embedding float[768]
-);
+-- 注意：此表需要 sqlite-vec 扩展加载后才能创建，已移至 vec 扩展可用时创建
+-- CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_chunk_vectors USING vec0(
+--   chunk_id INTEGER,
+--   embedding float[768]
+-- );
 
 -- enterprise_facts: 企业结构化事实
 CREATE TABLE IF NOT EXISTS enterprise_facts (

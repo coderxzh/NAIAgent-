@@ -5,6 +5,13 @@ export const DbQuerySchema = z.object({
   params: z.array(z.unknown()).optional(),
 });
 
+export const DbExecSchema = z.object({
+  sql: z.string().min(1),
+  params: z.array(z.unknown()).optional(),
+});
+
+export type DbExecInput = z.infer<typeof DbExecSchema>;
+
 export const VectorSearchSchema = z.object({
   table: z.string().min(1),
   queryVector: z.array(z.number()).min(1),

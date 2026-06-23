@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
+import { toast } from '@/lib/toast';
 import { Globe, Moon, Bell, Settings } from 'lucide-react';
 
 interface SettingsDialogProps {
@@ -113,7 +114,10 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
             </div>
             <Switch
               checked={notificationsEnabled}
-              onCheckedChange={setNotificationsEnabled}
+              onCheckedChange={(checked) => {
+                setNotificationsEnabled(checked);
+                toast.info(checked ? '通知已开启' : '通知已关闭');
+              }}
             />
           </div>
         </div>

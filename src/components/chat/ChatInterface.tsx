@@ -6,6 +6,8 @@ import {
   ConversationContent,
 } from '@/components/ai-elements/conversation';
 import { useTheme } from '@/hooks/use-theme';
+import { useAppState } from '@/context/AppStateContext';
+import { chatService } from '@/services/chatService';
 import type { UploadedFile, ChatMessage } from '@/lib/file-upload';
 import { formatFileSize } from '@/lib/file-upload';
 import WelcomeScreen from './WelcomeScreen';
@@ -39,6 +41,7 @@ export default function ChatInterface({
   modelList = ['豆包2.0', 'DeepSeek', 'Qwen3.5'],
 }: ChatInterfaceProps) {
   const { lang } = useTheme();
+  const { currentProject } = useAppState();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -54,32 +57,46 @@ export default function ChatInterface({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
 
-  const simulateAIResponse = useCallback(
-    (userContent: string) => {
+  const generateResponse = useCallback(
+    async (userContent: string) => {
       setIsLoading(true);
-      timeoutRef.current = setTimeout(() => {
-        const responses: Record<string, string> = {
-          zh: `收到您的消息："${userContent.substring(0, 50)}${userContent.length > 50 ? '...' : ''}"
+      try {
+        let reply: ChatMessage;
 
-我是 GEO Agent，您的企业 GEO 优化助手。我可以基于知识库帮您生成稿件、优化内容、分析可见性。请告诉我接下来想做什么。`,
-          en: `Received your message: "${userContent.substring(0, 50)}${userContent.length > 50 ? '...' : ''}"
+        if (currentProject) {
+          const result = await chatService.askQuestion(currentProject.id, userContent);
+          reply = {
+            id: `assistant_${Date.now()}`,
+            role: 'assistant',
+            content: result.answer,
+            sources: result.sources,
+          };
+        } else {
+          const responses: Record<string, string> = {
+            zh: `收到您的消息："${userContent.substring(0, 50)}${userContent.length > 50 ? '...' : ''}"
 
-I'm GEO Agent, your enterprise GEO optimization assistant. I can generate drafts, optimize content, and analyze visibility based on your knowledge base. What would you like to do next?`,
-        };
-        const reply: ChatMessage = {
-          id: `assistant_${Date.now()}`,
-          role: 'assistant',
-          content: responses[lang] ?? responses.en,
-        };
+我是 GEO Agent，您的企业 GEO 优化助手。我可以基于知识库帮您生成稿件、优化内容、分析可见性。请先在左侧选择一个项目或创建企业知识库，然后再提问。`,
+            en: `Received your message: "${userContent.substring(0, 50)}${userContent.length > 50 ? '...' : ''}"
+
+I'm GEO Agent, your enterprise GEO optimization assistant. I can generate drafts, optimize content, and analyze visibility based on your knowledge base. Please select or create a project first, then ask your question.`,
+          };
+          reply = {
+            id: `assistant_${Date.now()}`,
+            role: 'assistant',
+            content: responses[lang] ?? responses.en,
+          };
+        }
+
         setMessages((prev) => [...prev, reply]);
+      } finally {
         setIsLoading(false);
-      }, 1200);
+      }
     },
-    [lang],
+    [lang, currentProject],
   );
 
   const handleSubmit = useCallback(
-    (message: { text: string; files: unknown[] }) => {
+    async (message: { text: string; files: unknown[] }) => {
       const text = message.text.trim();
       if (!text && uploadedFiles.length === 0) return;
 
@@ -97,9 +114,9 @@ I'm GEO Agent, your enterprise GEO optimization assistant. I can generate drafts
         setInternalFiles([]);
       }
 
-      simulateAIResponse(text);
+      await generateResponse(text);
     },
-    [uploadedFiles.length, simulateAIResponse, onFileUpload],
+    [uploadedFiles.length, generateResponse, onFileUpload],
   );
 
   const handleFileUpload = useCallback(

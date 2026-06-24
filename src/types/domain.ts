@@ -16,6 +16,26 @@ export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 export type FactStatus = 'draft' | 'confirmed';
 export type ChatRole = 'user' | 'assistant' | 'system';
 
+// 知识库向量检索结果
+export interface KnowledgeSearchResult {
+  chunkId: number;
+  distance?: number;
+  chunkText: string;
+  chunkIndex: number;
+  entryId: number;
+  entryTitle: string;
+  sourceType: string | null;
+  sourceFilePath: string | null;
+}
+
+// 索引结果
+export interface IndexingResult {
+  entryId: number;
+  chunkCount: number;
+  status: KnowledgeEntryStatus;
+  error?: string;
+}
+
 // 项目
 export interface Project {
   id: number;

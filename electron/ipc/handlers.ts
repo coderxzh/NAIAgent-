@@ -5,9 +5,18 @@ import {
   AppPathSchema,
   DbExecSchema,
   DbQuerySchema,
+  KbIndexEntrySchema,
+  KbIngestFileSchema,
+  KbIngestTextSchema,
+  KbSearchSchema,
   OpenFileSchema,
+  RagAskSchema,
   VectorSearchSchema,
 } from './schemas.ts';
+import {indexEntry} from '../services/indexingService.ts';
+import {embedText} from '../services/embedding.ts';
+import {searchSimilarChunks} from '../services/vectorStore.ts';
+import {askQuestion} from '../services/ragService.ts';
 import type {IpcChannels} from './channels.ts';
 
 let mainWindow: BrowserWindow | null = null;
@@ -78,6 +87,73 @@ export function registerIpcHandlers() {
   createHandler('app:getPath', (name) => {
     const validated = AppPathSchema.parse(name);
     return app.getPath(validated);
+  });
+
+  function getOrCreateDefaultKb(projectId: number): number {
+    const existing = db
+      .prepare('SELECT id FROM knowledge_bases WHERE project_id = ? ORDER BY created_at LIMIT 1')
+      .get(projectId) as {id: number} | undefined;
+    if (existing) return existing.id;
+
+    const result = db
+      .prepare(
+        "INSERT INTO knowledge_bases (project_id, name, description, created_at) VALUES (?, ?, ?, datetime('now'))",
+      )
+      .run(projectId, '默认知识库', null);
+    return Number(result.lastInsertRowid);
+  }
+
+  createHandler('kb:ingestText', async (params) => {
+    const validated = KbIngestTextSchema.parse(params);
+    const kbId = getOrCreateDefaultKb(validated.projectId);
+    const result = db
+      .prepare(
+        "INSERT INTO knowledge_entries (kb_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+      )
+      .run(kbId, validated.title, validated.content, 'text', null, 'pending');
+    const entryId = Number(result.lastInsertRowid);
+    return indexEntry(entryId);
+  });
+
+  createHandler('kb:ingestFile', async (params) => {
+    const validated = KbIngestFileSchema.parse(params);
+    const kbId = getOrCreateDefaultKb(validated.projectId);
+    const result = db
+      .prepare(
+        "INSERT INTO knowledge_entries (kb_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+      )
+      .run(kbId, validated.title, null, 'file', validated.filePath, 'pending');
+    const entryId = Number(result.lastInsertRowid);
+    return indexEntry(entryId);
+  });
+
+  createHandler('kb:indexEntry', async (params) => {
+    const validated = KbIndexEntrySchema.parse(params);
+    return indexEntry(validated.entryId);
+  });
+
+  createHandler('kb:search', async (params) => {
+    const validated = KbSearchSchema.parse(params);
+    const queryVector = await embedText(validated.query);
+    const results = searchSimilarChunks(queryVector, validated.limit ?? 5);
+    // Filter by project by joining knowledge_bases
+    return results.filter((r) => {
+      const kb = db
+        .prepare(
+          `SELECT kb.project_id
+           FROM knowledge_chunks c
+           JOIN knowledge_entries e ON c.entry_id = e.id
+           JOIN knowledge_bases kb ON e.kb_id = kb.id
+           WHERE c.id = ?`,
+        )
+        .get(r.chunkId) as {project_id: number} | undefined;
+      return kb?.project_id === validated.projectId;
+    });
+  });
+
+  createHandler('rag:ask', async (params) => {
+    const validated = RagAskSchema.parse(params);
+    return askQuestion(validated.projectId, validated.query, validated.limit ?? 5);
   });
 
   createHandler('window:minimize', () => {

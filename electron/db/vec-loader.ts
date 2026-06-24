@@ -22,6 +22,7 @@ export function loadVecExtension(db: {loadExtension: (path: string) => void}) {
     join(process.cwd(), 'node_modules/sqlite-vec-darwin-x64/vec0'),
     join(process.cwd(), 'node_modules/sqlite-vec-linux-x64/vec0'),
     join(process.cwd(), 'node_modules/sqlite-vec-win32-x64/vec0'),
+    join(process.cwd(), 'node_modules/sqlite-vec-windows-x64/vec0'),
     join(process.resourcesPath ?? '', 'vec0'),
     join(__dirname, '../../resources/vec0'),
   ];

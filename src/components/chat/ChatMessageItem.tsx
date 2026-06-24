@@ -1,11 +1,10 @@
 'use client';
 
 import { motion } from 'motion/react';
-import {
-  MessageResponse,
-} from '@/components/ai-elements/message';
+import { MessageResponse } from '@/components/ai-elements/message';
 import { useTheme } from '@/hooks/use-theme';
 import type { ChatMessage } from '@/lib/file-upload';
+import { FileText } from 'lucide-react';
 
 interface ChatMessageItemProps {
   message: ChatMessage;
@@ -24,7 +23,8 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
     >
       <div className="max-w-[88%] md:max-w-[78%]">
         {isUser ? (
-          <div className={`
+          <div
+            className={`
             px-4 py-2.5 rounded-2xl rounded-tr-sm
             text-[15px] leading-relaxed
             bg-[#F37021] text-white shadow-sm
@@ -33,16 +33,41 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
             {message.content}
           </div>
         ) : (
-          <div className={`
+          <div
+            className={`
             px-4 py-2.5 rounded-2xl rounded-tl-sm border
             text-[15px] leading-relaxed
             ${cls(
               'bg-zinc-50/80 border-zinc-100 text-gray-900',
-              'bg-zinc-900/40 border-white/[0.06] text-zinc-100'
+              'bg-zinc-900/40 border-white/[0.06] text-zinc-100',
             )}
           `}
           >
             <MessageResponse>{message.content}</MessageResponse>
+          </div>
+        )}
+
+        {!isUser && message.sources && message.sources.length > 0 && (
+          <div className="mt-2 space-y-1">
+            <p className={cls('text-xs text-gray-500', 'text-zinc-500')}>参考来源：</p>
+            {message.sources.map((source, idx) => (
+              <div
+                key={source.chunkId}
+                className={`
+                  flex items-start gap-2 text-xs px-2 py-1.5 rounded-lg border
+                  ${cls(
+                    'bg-white border-gray-100 text-gray-600',
+                    'bg-zinc-800/50 border-zinc-700/50 text-zinc-400',
+                  )}
+                `}
+              >
+                <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <span className="font-medium">[{idx + 1}] {source.entryTitle}</span>
+                  <p className="truncate">{source.chunkText}</p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

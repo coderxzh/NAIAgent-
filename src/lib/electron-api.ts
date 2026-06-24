@@ -26,6 +26,21 @@ export const dialogApi = {
     api.invoke('dialog:openFile', options),
 };
 
+export const kbApi = {
+  ingestText: (projectId: number, title: string, content: string) =>
+    api.invoke('kb:ingestText', {projectId, title, content}),
+  ingestFile: (projectId: number, title: string, filePath: string) =>
+    api.invoke('kb:ingestFile', {projectId, title, filePath}),
+  indexEntry: (entryId: number) => api.invoke('kb:indexEntry', {entryId}),
+  search: (projectId: number, query: string, limit?: number) =>
+    api.invoke('kb:search', {projectId, query, limit}),
+};
+
+export const ragApi = {
+  ask: (projectId: number, query: string, limit?: number) =>
+    api.invoke('rag:ask', {projectId, query, limit}),
+};
+
 export const appApi = {
   getPath: (name: Parameters<IpcChannels['app:getPath']>[0]) =>
     api.invoke('app:getPath', name),

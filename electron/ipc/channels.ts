@@ -1,3 +1,35 @@
+interface IndexingResult {
+  entryId: number;
+  chunkCount: number;
+  status: 'pending' | 'indexed' | 'failed';
+  error?: string;
+}
+
+interface KnowledgeSearchResult {
+  chunkId: number;
+  distance: number;
+  chunkText: string;
+  chunkIndex: number;
+  entryId: number;
+  entryTitle: string;
+  sourceType: string | null;
+  sourceFilePath: string | null;
+}
+
+interface RagAnswer {
+  answer: string;
+  sources: Array<{
+    chunkId: number;
+    entryId: number;
+    entryTitle: string;
+    chunkText: string;
+    chunkIndex: number;
+    sourceType: string | null;
+    sourceFilePath: string | null;
+  }>;
+  model: string;
+}
+
 export interface IpcChannels {
   ping: () => 'pong';
 
@@ -16,6 +48,28 @@ export interface IpcChannels {
   }) => string[];
 
   'app:getPath': (name: 'userData' | 'home' | 'downloads') => string;
+
+  'kb:ingestText': (params: {
+    projectId: number;
+    title: string;
+    content: string;
+  }) => IndexingResult;
+  'kb:ingestFile': (params: {
+    projectId: number;
+    title: string;
+    filePath: string;
+  }) => IndexingResult;
+  'kb:indexEntry': (params: {entryId: number}) => IndexingResult;
+  'kb:search': (params: {
+    projectId: number;
+    query: string;
+    limit?: number;
+  }) => KnowledgeSearchResult[];
+  'rag:ask': (params: {
+    projectId: number;
+    query: string;
+    limit?: number;
+  }) => RagAnswer;
 
   'window:minimize': () => void;
   'window:maximize': () => void;

@@ -1,5 +1,11 @@
-import { dbApi } from '../lib/electron-api';
-import type { ChatMessage, ChatSession } from '../types/domain';
+import { dbApi, ragApi } from '../lib/electron-api';
+import type { ChatMessage, ChatSession, KnowledgeSearchResult } from '../types/domain';
+
+export interface RagAnswer {
+  answer: string;
+  sources: KnowledgeSearchResult[];
+  model: string;
+}
 
 export const chatService = {
   async getSessions(projectId: number): Promise<ChatSession[]> {
@@ -42,5 +48,13 @@ export const chatService = {
 
   async deleteSession(id: number): Promise<void> {
     await dbApi.exec(`DELETE FROM chat_sessions WHERE id = ${id}`);
+  },
+
+  async askQuestion(
+    projectId: number,
+    query: string,
+    limit = 5,
+  ): Promise<RagAnswer> {
+    return ragApi.ask(projectId, query, limit);
   },
 };

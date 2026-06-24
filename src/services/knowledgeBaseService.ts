@@ -1,5 +1,5 @@
-import { dbApi } from '../lib/electron-api';
-import type { KnowledgeBase, KnowledgeEntry } from '../types/domain';
+import { dbApi, kbApi } from '../lib/electron-api';
+import type { IndexingResult, KnowledgeBase, KnowledgeEntry, KnowledgeSearchResult } from '../types/domain';
 
 export const knowledgeBaseService = {
   async getByProject(projectId: number): Promise<KnowledgeBase[]> {
@@ -69,45 +69,21 @@ export const knowledgeBaseService = {
   },
 
   async ingestText(projectId: number, title: string, content: string): Promise<number> {
-    // 获取或创建默认知识库
-    const kbs = await this.getByProject(projectId);
-    let kbId: number;
-    if (kbs.length > 0) {
-      kbId = kbs[0].id;
-    } else {
-      kbId = await this.create({
-        project_id: projectId,
-        name: '默认知识库',
-        description: null,
-      });
-    }
-
-    const result = await dbApi.exec(
-      "INSERT INTO knowledge_entries (kb_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
-      [kbId, title, content, 'text', null, 'pending'],
-    );
-    return Number(result.lastInsertRowid);
+    const result = await kbApi.ingestText(projectId, title, content);
+    return result.entryId;
   },
 
   async ingestFile(projectId: number, title: string, filePath: string): Promise<number> {
-    // 获取或创建默认知识库
-    const kbs = await this.getByProject(projectId);
-    let kbId: number;
-    if (kbs.length > 0) {
-      kbId = kbs[0].id;
-    } else {
-      kbId = await this.create({
-        project_id: projectId,
-        name: '默认知识库',
-        description: null,
-      });
-    }
+    const result = await kbApi.ingestFile(projectId, title, filePath);
+    return result.entryId;
+  },
 
-    const result = await dbApi.exec(
-      "INSERT INTO knowledge_entries (kb_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
-      [kbId, title, null, 'file', filePath, 'pending'],
-    );
-    return Number(result.lastInsertRowid);
+  async indexEntry(entryId: number): Promise<IndexingResult> {
+    return kbApi.indexEntry(entryId);
+  },
+
+  async search(projectId: number, query: string, limit = 5): Promise<KnowledgeSearchResult[]> {
+    return kbApi.search(projectId, query, limit);
   },
 
   async deleteEntry(id: number): Promise<void> {

@@ -19,6 +19,15 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  sources?: Array<{
+    chunkId: number;
+    entryId: number;
+    entryTitle: string;
+    chunkText: string;
+    chunkIndex: number;
+    sourceType: string | null;
+    sourceFilePath: string | null;
+  }>;
 }
 
 /**

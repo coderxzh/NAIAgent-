@@ -1,6 +1,7 @@
 export const i18n = {
   zh: {
     dashboard: '仪表盘',
+    projects: '项目管理',
     aiAgent: '智能Agent',
     drafts: '稿件管理',
     autoLearning: '自动学习',
@@ -141,6 +142,7 @@ export const i18n = {
   },
   en: {
     dashboard: 'Dashboard',
+    projects: 'Projects',
     aiAgent: 'AI Agent',
     drafts: 'Drafts',
     autoLearning: 'Auto Learning',

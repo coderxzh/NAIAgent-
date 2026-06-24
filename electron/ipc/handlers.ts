@@ -3,6 +3,7 @@ import {getDb} from '../db/connection.ts';
 import {runMigrations} from '../db/migrations.ts';
 import {
   AppPathSchema,
+  DbExecSchema,
   DbQuerySchema,
   OpenFileSchema,
   VectorSearchSchema,
@@ -43,9 +44,9 @@ export function registerIpcHandlers() {
     return db.prepare(validated.sql).all(...(validated.params ?? []));
   });
 
-  createHandler('db:exec', (sql) => {
-    const validated = DbQuerySchema.parse({sql});
-    return db.prepare(validated.sql).run();
+  createHandler('db:exec', (sql, params) => {
+    const validated = DbExecSchema.parse({sql, params});
+    return db.prepare(validated.sql).run(...(validated.params ?? []));
   });
 
   createHandler('db:migrate', () => {

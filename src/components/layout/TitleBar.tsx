@@ -64,7 +64,7 @@ export default function TitleBar() {
     <div
       className={cn(
         'h-10 w-full flex items-center justify-between select-none app-drag-region',
-        cls('bg-[#f5f6f8] border-b border-gray-200/50', 'bg-[#18181c] border-b border-zinc-800/50')
+        cls('bg-[#f5f6f8]', 'bg-[#18181c]')
       )}
     >
       <div className="flex items-center gap-2 px-3">

@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useView } from './context/ViewContext';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/toaster';
 import LayoutShell from './components/layout/LayoutShell';
 import DashboardView from './components/dashboard/DashboardView';
 import ChatInterface from './components/chat/ChatInterface';

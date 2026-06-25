@@ -7,7 +7,6 @@ import {
 } from '@/components/ai-elements/conversation';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppState } from '@/context/AppStateContext';
-import { cn } from '@/lib/utils';
 import { chatService } from '@/services/chatService';
 import { projectService } from '@/services/projectService';
 import { agentTaskApi } from '@/lib/electron-api';
@@ -310,7 +309,7 @@ export default function ChatInterface({
 
   return (
     <div className="flex flex-col h-full w-full max-w-4xl mx-auto">
-      <div className={cn('flex items-center justify-between px-1 pb-2')}>
+      <div className="flex items-center gap-2 pb-2">
         <Button
           variant="outline"
           size="sm"

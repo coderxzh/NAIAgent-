@@ -29,6 +29,14 @@ interface ChatInterfaceProps {
   onProjectChange?: (project: string) => void;
   projectList?: Project[];
   getProjectColor?: (name: string) => string;
+  /** @deprecated Use selectedProject instead */
+  selectedTeam?: string;
+  /** @deprecated Use onProjectChange instead */
+  onTeamChange?: (team: string) => void;
+  /** @deprecated Use projectList instead */
+  teamList?: string[];
+  /** @deprecated Use getProjectColor instead */
+  getTeamColor?: (name: string) => string;
   selectedModel?: string;
   onModelChange?: (model: string) => void;
   modelList?: string[];
@@ -39,9 +47,13 @@ export default function ChatInterface({
   onRemoveFile,
   onFileUpload,
   selectedProject: externalSelectedProject,
-  onProjectChange,
+  onProjectChange: externalOnProjectChange,
   projectList: externalProjectList,
-  getProjectColor = () => '#F37021',
+  getProjectColor: externalGetProjectColor,
+  selectedTeam: externalSelectedTeam,
+  onTeamChange: externalOnTeamChange,
+  teamList: externalTeamList,
+  getTeamColor: externalGetTeamColor,
   selectedModel: externalSelectedModel,
   onModelChange,
   modelList = ['豆包2.0', 'DeepSeek', 'Qwen3.5'],
@@ -59,11 +71,26 @@ export default function ChatInterface({
   const [internalModel, setInternalModel] = useState('豆包2.0');
   const [internalProjectList, setInternalProjectList] = useState<Project[]>([]);
 
-  const uploadedFiles = externalFiles ?? internalFiles;
-  const selectedProject = externalSelectedProject ?? internalProject;
-  const selectedModel = externalSelectedModel ?? internalModel;
-  const projectList = externalProjectList ?? internalProjectList;
+  const effectiveSelectedProject = externalSelectedProject ?? externalSelectedTeam ?? internalProject;
+  const effectiveOnProjectChange = externalOnProjectChange ?? externalOnTeamChange;
+  const effectiveGetProjectColor = externalGetProjectColor ?? externalGetTeamColor ?? (() => '#F37021');
+  const effectiveProjectList =
+    externalProjectList ??
+    externalTeamList?.map((name, idx) => ({
+      id: -idx,
+      name,
+      description: null,
+      created_at: '',
+      updated_at: '',
+    })) ??
+    internalProjectList;
 
+  const uploadedFiles = externalFiles ?? internalFiles;
+  const selectedProject = effectiveSelectedProject;
+  const selectedModel = externalSelectedModel ?? internalModel;
+  const projectList = effectiveProjectList;
+
+  const getProjectColor = effectiveGetProjectColor;
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
 
@@ -243,8 +270,8 @@ export default function ChatInterface({
 
   const handleProjectChange = useCallback(
     (projectName: string) => {
-      if (onProjectChange) {
-        onProjectChange(projectName);
+      if (effectiveOnProjectChange) {
+        effectiveOnProjectChange(projectName);
       } else {
         setInternalProject(projectName);
       }
@@ -253,7 +280,7 @@ export default function ChatInterface({
         setCurrentProject(project);
       }
     },
-    [onProjectChange, projectList, setCurrentProject],
+    [effectiveOnProjectChange, projectList, setCurrentProject],
   );
 
   const handleModelChange = useCallback(

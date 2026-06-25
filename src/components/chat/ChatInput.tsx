@@ -40,10 +40,18 @@ interface ChatInputProps {
   onRemoveFile: (id: string) => void;
   isLoading: boolean;
   onStop: () => void;
-  selectedProject: string;
-  onProjectChange: (project: string) => void;
-  projectList: Project[];
-  getProjectColor: (name: string) => string;
+  selectedProject?: string;
+  onProjectChange?: (project: string) => void;
+  projectList?: Project[];
+  getProjectColor?: (name: string) => string;
+  /** @deprecated Use selectedProject instead */
+  selectedTeam?: string;
+  /** @deprecated Use onProjectChange instead */
+  onTeamChange?: (team: string) => void;
+  /** @deprecated Use projectList instead */
+  teamList?: string[];
+  /** @deprecated Use getProjectColor instead */
+  getTeamColor?: (name: string) => string;
   selectedModel: string;
   onModelChange: (model: string) => void;
   modelList: string[];
@@ -62,11 +70,29 @@ export default function ChatInput({
   onProjectChange,
   projectList,
   getProjectColor,
+  selectedTeam,
+  onTeamChange,
+  teamList,
+  getTeamColor,
   selectedModel,
   onModelChange,
   modelList,
 }: ChatInputProps) {
   const { t, cls } = useTheme();
+
+  const effectiveSelectedProject = selectedProject || selectedTeam || '';
+  const effectiveOnProjectChange = onProjectChange || onTeamChange;
+  const effectiveProjectList =
+    projectList && projectList.length > 0
+      ? projectList
+      : (teamList?.map((name, idx) => ({
+          id: -idx,
+          name,
+          description: null,
+          created_at: '',
+          updated_at: '',
+        })) ?? []);
+  const effectiveGetProjectColor = getProjectColor || getTeamColor || (() => '#F37021');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -232,24 +258,24 @@ export default function ChatInput({
                 >
                   <FolderOpen className="w-4 h-4 shrink-0 text-[#F37021]" strokeWidth={1.8} />
                   <span className="text-sm font-medium max-w-[100px] truncate">
-                    {selectedProject || t.chatCurrentProject}
+                    {effectiveSelectedProject || t.chatCurrentProject}
                   </span>
                   <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-50" strokeWidth={2} />
                 </PromptInputButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="top" className="w-64 rounded-2xl p-2 max-h-[300px] overflow-y-auto">
-                {projectList.map((project) => (
+                {effectiveProjectList.map((project) => (
                   <DropdownMenuItem
                     key={project.id}
-                    onClick={() => onProjectChange(project.name)}
+                    onClick={() => effectiveOnProjectChange?.(project.name)}
                     className="rounded-xl px-3 py-2.5 gap-3 cursor-pointer"
                   >
                     <span
                       className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: getProjectColor(project.name) }}
+                      style={{ backgroundColor: effectiveGetProjectColor(project.name) }}
                     />
                     <span className="text-sm font-medium flex-1 truncate">{project.name}</span>
-                    {selectedProject === project.name && (
+                    {effectiveSelectedProject === project.name && (
                       <span className="text-xs text-[#F37021] font-semibold">✓</span>
                     )}
                   </DropdownMenuItem>

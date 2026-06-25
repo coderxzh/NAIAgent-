@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
-import { History, Plus, Search, Trash2 } from 'lucide-react';
+import { History, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import type { ChatSession, ChatMessage } from '@/types/domain';
 import { chatService } from '@/services/chatService';
 
@@ -163,12 +163,22 @@ export default function ChatHistoryPanel({
       ) : (
         <ScrollArea className="flex-1 -mx-6 px-6">
           <div className="space-y-6">
+            {loading && sessions.length > 0 && (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
             {groupOrder.map((key) => {
               const list = groups[key];
               if (list.length === 0) return null;
               return (
                 <div key={key}>
-                  <h3 className="text-xs font-medium text-gray-500 mb-2 px-1">
+                  <h3
+                    className={cn(
+                      'text-xs font-medium mb-2 px-1',
+                      cls('text-gray-500', 'text-zinc-400')
+                    )}
+                  >
                     {groupLabels[key]}
                   </h3>
                   <div className="space-y-2">

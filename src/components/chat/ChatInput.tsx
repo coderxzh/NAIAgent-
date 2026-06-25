@@ -10,11 +10,6 @@ import {
   PromptInputTools,
   PromptInputButton,
   PromptInputSubmit,
-  PromptInputSelect,
-  PromptInputSelectContent,
-  PromptInputSelectItem,
-  PromptInputSelectTrigger,
-  PromptInputSelectValue,
 } from '@/components/ai-elements/prompt-input';
 import {
   DropdownMenu,
@@ -34,6 +29,7 @@ import {
 } from 'lucide-react';
 import type { UploadedFile } from '@/lib/file-upload';
 import { getFileIconAndColor, formatFileSize } from '@/lib/file-upload';
+import type { Project } from '@/types/domain';
 
 interface ChatInputProps {
   inputText: string;
@@ -44,10 +40,10 @@ interface ChatInputProps {
   onRemoveFile: (id: string) => void;
   isLoading: boolean;
   onStop: () => void;
-  selectedTeam: string;
-  onTeamChange: (team: string) => void;
-  teamList: string[];
-  getTeamColor: (name: string) => string;
+  selectedProject: string;
+  onProjectChange: (project: string) => void;
+  projectList: Project[];
+  getProjectColor: (name: string) => string;
   selectedModel: string;
   onModelChange: (model: string) => void;
   modelList: string[];
@@ -62,10 +58,10 @@ export default function ChatInput({
   onRemoveFile,
   isLoading,
   onStop,
-  selectedTeam,
-  onTeamChange,
-  teamList,
-  getTeamColor,
+  selectedProject,
+  onProjectChange,
+  projectList,
+  getProjectColor,
   selectedModel,
   onModelChange,
   modelList,
@@ -236,24 +232,24 @@ export default function ChatInput({
                 >
                   <FolderOpen className="w-4 h-4 shrink-0 text-[#F37021]" strokeWidth={1.8} />
                   <span className="text-sm font-medium max-w-[100px] truncate">
-                    {selectedTeam || t.chatCurrentProject}
+                    {selectedProject || t.chatCurrentProject}
                   </span>
                   <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-50" strokeWidth={2} />
                 </PromptInputButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="top" className="w-64 rounded-2xl p-2 max-h-[300px] overflow-y-auto">
-                {teamList.map((teamName) => (
+                {projectList.map((project) => (
                   <DropdownMenuItem
-                    key={teamName}
-                    onClick={() => onTeamChange(teamName)}
+                    key={project.id}
+                    onClick={() => onProjectChange(project.name)}
                     className="rounded-xl px-3 py-2.5 gap-3 cursor-pointer"
                   >
                     <span
                       className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: getTeamColor(teamName) }}
+                      style={{ backgroundColor: getProjectColor(project.name) }}
                     />
-                    <span className="text-sm font-medium flex-1 truncate">{teamName}</span>
-                    {selectedTeam === teamName && (
+                    <span className="text-sm font-medium flex-1 truncate">{project.name}</span>
+                    {selectedProject === project.name && (
                       <span className="text-xs text-[#F37021] font-semibold">✓</span>
                     )}
                   </DropdownMenuItem>
@@ -263,21 +259,9 @@ export default function ChatInput({
           </PromptInputTools>
 
           <PromptInputTools className="items-center gap-1.5">
-            <PromptInputSelect value={selectedModel} onValueChange={onModelChange}>
-              <PromptInputSelectTrigger
-                aria-label={t.chatModelSelector}
-                className="rounded-full h-9 px-3 gap-2 hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
-              >
-                <PromptInputSelectValue />
-              </PromptInputSelectTrigger>
-              <PromptInputSelectContent position="popper" side="top" align="end" className="rounded-2xl p-2 min-w-[160px]">
-                {modelList.map((model) => (
-                  <PromptInputSelectItem key={model} value={model} className="rounded-xl px-3 py-2.5">
-                    {model}
-                  </PromptInputSelectItem>
-                ))}
-              </PromptInputSelectContent>
-            </PromptInputSelect>
+            <div className="rounded-full h-9 px-3 flex items-center gap-2 text-sm font-medium text-muted-foreground bg-black/5 dark:bg-white/10 select-none">
+              Auto
+            </div>
 
             <PromptInputSubmit
               status={isLoading ? 'submitted' : 'ready'}

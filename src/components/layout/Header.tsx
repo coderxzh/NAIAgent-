@@ -24,14 +24,11 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
         >
           <Menu className="w-6 h-6" />
         </button>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-muted-foreground">NAI Agent</span>
-          {currentProject && (
-            <span className="text-xs text-muted-foreground">
-              {currentProject.name}
-            </span>
-          )}
-        </div>
+        {currentProject && (
+          <span className="text-xs text-muted-foreground">
+            {currentProject.name}
+          </span>
+        )}
       </div>
     </header>
   );

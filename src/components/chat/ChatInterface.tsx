@@ -18,6 +18,7 @@ import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import ChatHistoryDrawer from './ChatHistoryDrawer';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import type { Project } from '@/types/domain';
 import { Plus, History } from 'lucide-react';
 
@@ -335,13 +336,13 @@ export default function ChatInterface({
   const showWelcome = messages.length === 0 && !isLoading;
 
   return (
-    <div className="flex flex-col h-full w-full max-w-4xl mx-auto">
+    <div className="relative flex flex-col h-full w-full">
       <div className="flex items-center gap-2 pb-2">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={handleNewChat}
-          className="gap-1"
+          className={cn('gap-1', cls('hover:bg-gray-100', 'hover:bg-zinc-800'))}
         >
           <Plus className="w-4 h-4" />
           {t.chatNewSession}
@@ -355,47 +356,53 @@ export default function ChatInterface({
           open={historyOpen}
           onOpenChange={setHistoryOpen}
         >
-          <Button variant="outline" size="sm" className="gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn('gap-1', cls('hover:bg-gray-100', 'hover:bg-zinc-800'))}
+          >
             <History className="w-4 h-4" />
             {t.chatHistory}
           </Button>
         </ChatHistoryDrawer>
       </div>
-      <div
-        className="flex-1 min-h-0 overflow-y-auto w-full flex flex-col"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {showWelcome ? (
-          <WelcomeScreen onSuggestionSelect={handleSuggestionSelect} />
-        ) : messages.length === 0 ? (
-          <EmptyChatState />
-        ) : (
-          <Conversation>
-            <ConversationContent>
-              <MessageList messages={messages} isLoading={isLoading} />
-            </ConversationContent>
-          </Conversation>
-        )}
-      </div>
+      <div className="flex flex-col h-full w-full max-w-4xl mx-auto">
+        <div
+          className="flex-1 min-h-0 overflow-y-auto w-full flex flex-col"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {showWelcome ? (
+            <WelcomeScreen onSuggestionSelect={handleSuggestionSelect} />
+          ) : messages.length === 0 ? (
+            <EmptyChatState />
+          ) : (
+            <Conversation>
+              <ConversationContent>
+                <MessageList messages={messages} isLoading={isLoading} />
+              </ConversationContent>
+            </Conversation>
+          )}
+        </div>
 
-      <div className="w-full shrink-0 pt-1 pb-2">
-        <ChatInput
-          inputText={inputText}
-          onInputChange={setInputText}
-          onSubmit={handleSubmit}
-          uploadedFiles={uploadedFiles}
-          onFileUpload={handleFileUpload}
-          onRemoveFile={handleRemoveFile}
-          isLoading={isLoading}
-          onStop={() => setIsLoading(false)}
-          selectedProject={selectedProject}
-          onProjectChange={handleProjectChange}
-          projectList={projectList}
-          getProjectColor={getProjectColor}
-          selectedModel={selectedModel}
-          onModelChange={handleModelChange}
-          modelList={modelList}
-        />
+        <div className="w-full shrink-0 pt-1 pb-2">
+          <ChatInput
+            inputText={inputText}
+            onInputChange={setInputText}
+            onSubmit={handleSubmit}
+            uploadedFiles={uploadedFiles}
+            onFileUpload={handleFileUpload}
+            onRemoveFile={handleRemoveFile}
+            isLoading={isLoading}
+            onStop={() => setIsLoading(false)}
+            selectedProject={selectedProject}
+            onProjectChange={handleProjectChange}
+            projectList={projectList}
+            getProjectColor={getProjectColor}
+            selectedModel={selectedModel}
+            onModelChange={handleModelChange}
+            modelList={modelList}
+          />
+        </div>
       </div>
     </div>
   );

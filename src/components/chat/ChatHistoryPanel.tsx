@@ -135,7 +135,12 @@ export default function ChatHistoryPanel({
           <History className="w-5 h-5 text-[#F37021]" />
           {t.chatHistory}
         </h2>
-        <Button variant="outline" size="sm" onClick={onNewChat} className="gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onNewChat}
+          className={cn('gap-1', cls('hover:bg-gray-100', 'hover:bg-zinc-800'))}
+        >
           <Plus className="w-4 h-4" />
           {t.chatNewSession}
         </Button>
@@ -148,7 +153,7 @@ export default function ChatHistoryPanel({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className={cn(
-            'pl-9 rounded-full',
+            'pl-9 h-10 rounded-full',
             cls('bg-gray-100 border-transparent', 'bg-zinc-800 border-transparent')
           )}
         />
@@ -189,7 +194,7 @@ export default function ChatHistoryPanel({
                           key={session.id}
                           onClick={() => onSelect(session)}
                           className={cn(
-                            'group relative flex flex-col gap-1 p-3 rounded-xl cursor-pointer transition-colors border',
+                            'group flex flex-col gap-1 p-3 rounded-xl cursor-pointer transition-colors border',
                             isActive
                               ? 'bg-[#F37021]/10 border-[#F37021]/20'
                               : cls(
@@ -199,12 +204,25 @@ export default function ChatHistoryPanel({
                           )}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-medium truncate flex-1">
+                            <p className="text-sm font-medium truncate flex-1 min-w-0">
                               {session.title || t.chatNewSession}
                             </p>
-                            <span className="shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-[#F37021]/10 text-[#F37021]">
-                              {countMap[session.id] ?? 0}
-                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-[#F37021]/10 text-[#F37021]">
+                                {countMap[session.id] ?? 0}
+                              </span>
+                              {onDelete && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(session.id);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 p-1 rounded-lg transition-opacity hover:bg-red-50 dark:hover:bg-red-950/20"
+                                >
+                                  <Trash2 className="w-4 h-4 text-red-500" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <p
                             className={cn(
@@ -214,17 +232,6 @@ export default function ChatHistoryPanel({
                           >
                             {previewMap[session.id] || t.chatHistoryNoMessages}
                           </p>
-                          {onDelete && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(session.id);
-                              }}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-opacity hover:bg-red-50 dark:hover:bg-red-950/20"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </button>
-                          )}
                         </div>
                       );
                     })}

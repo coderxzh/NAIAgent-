@@ -1,47 +1,100 @@
 import { dbApi } from '../lib/electron-api';
-import type { GeoArtifact } from '../types/domain';
+import type { AgentArtifact } from '../types/domain';
 
 export const draftService = {
-  async getByRun(runId: number): Promise<GeoArtifact[]> {
+  async getByTask(taskId: number): Promise<AgentArtifact[]> {
     return dbApi.query(
-      'SELECT id, run_id, artifact_type, title, content, created_at FROM geo_artifacts WHERE run_id = ? ORDER BY created_at DESC',
-      [runId],
-    ) as Promise<GeoArtifact[]>;
+      `SELECT id, task_id, project_id, artifact_type, title, content,
+              metadata_json, status, created_at, updated_at
+       FROM agent_artifacts
+       WHERE task_id = ?
+       ORDER BY created_at DESC`,
+      [taskId],
+    ) as Promise<AgentArtifact[]>;
   },
 
-  async getById(id: number): Promise<GeoArtifact | undefined> {
+  async getByProject(projectId: number): Promise<AgentArtifact[]> {
+    return dbApi.query(
+      `SELECT id, task_id, project_id, artifact_type, title, content,
+              metadata_json, status, created_at, updated_at
+       FROM agent_artifacts
+       WHERE project_id = ?
+       ORDER BY created_at DESC`,
+      [projectId],
+    ) as Promise<AgentArtifact[]>;
+  },
+
+  async getById(id: number): Promise<AgentArtifact | undefined> {
     const rows = (await dbApi.query(
-      'SELECT id, run_id, artifact_type, title, content, created_at FROM geo_artifacts WHERE id = ?',
+      `SELECT id, task_id, project_id, artifact_type, title, content,
+              metadata_json, status, created_at, updated_at
+       FROM agent_artifacts
+       WHERE id = ?`,
       [id],
-    )) as GeoArtifact[];
+    )) as AgentArtifact[];
     return rows[0];
   },
 
   async create(
-    data: Omit<GeoArtifact, 'id' | 'created_at'>,
+    data: Omit<AgentArtifact, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<number> {
     const result = await dbApi.exec(
-      `INSERT INTO geo_artifacts (run_id, artifact_type, title, content, created_at)
-       VALUES (${data.run_id}, '${data.artifact_type.replace(
-         /'/g,
-         "''",
-       )}', '${data.title?.replace(/'/g, "''") ?? ''}', '${
-         data.content?.replace(/'/g, "''") ?? ''
-       }', datetime('now'))`,
+      `INSERT INTO agent_artifacts (
+         task_id, project_id, artifact_type, title, content,
+         metadata_json, status, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      [
+        data.task_id ?? null,
+        data.project_id,
+        data.artifact_type,
+        data.title ?? null,
+        data.content ?? null,
+        data.metadata_json ?? null,
+        data.status ?? 'draft',
+      ],
     );
     return Number(result.lastInsertRowid);
   },
 
   async updateArtifact(id: number, content: string): Promise<void> {
     await dbApi.exec(
-      `UPDATE geo_artifacts SET content = '${content.replace(
-        /'/g,
-        "''",
-      )}' WHERE id = ${id}`,
+      `UPDATE agent_artifacts
+       SET content = ?, updated_at = datetime('now')
+       WHERE id = ?`,
+      [content, id],
     );
   },
 
+  async update(
+    id: number,
+    data: Partial<Omit<AgentArtifact, 'id' | 'created_at'>>,
+  ): Promise<void> {
+    const fields: string[] = [];
+    const params: unknown[] = [];
+
+    const addField = (name: keyof AgentArtifact, value: unknown) => {
+      if (value !== undefined) {
+        fields.push(`${name} = ?`);
+        params.push(value);
+      }
+    };
+
+    addField('task_id', data.task_id);
+    addField('project_id', data.project_id);
+    addField('artifact_type', data.artifact_type);
+    addField('title', data.title);
+    addField('content', data.content);
+    addField('metadata_json', data.metadata_json);
+    addField('status', data.status);
+
+    if (fields.length === 0) return;
+    fields.push("updated_at = datetime('now')");
+    params.push(id);
+
+    await dbApi.exec(`UPDATE agent_artifacts SET ${fields.join(', ')} WHERE id = ?`, params);
+  },
+
   async delete(id: number): Promise<void> {
-    await dbApi.exec(`DELETE FROM geo_artifacts WHERE id = ${id}`);
+    await dbApi.exec('DELETE FROM agent_artifacts WHERE id = ?', [id]);
   },
 };

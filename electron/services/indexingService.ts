@@ -1,6 +1,8 @@
 import {getDb} from '../db/connection.ts';
 import {parseFile} from './parser.ts';
-import {splitText} from './chunker.ts';
+import {cleanText} from './textCleaner.ts';
+import {chunkDocument} from './semanticChunker.ts';
+import {scoreChunk, contentHash, estimateTokenCount} from './chunkQualityScorer.ts';
 import {embedTexts} from './embedding.ts';
 import {
   deleteChunkVectorsByEntry,
@@ -25,11 +27,12 @@ export async function indexEntry(entryId: number): Promise<IndexingResult> {
 
     const entry = db
       .prepare(
-        'SELECT id, title, content, source_type, source_file_path FROM knowledge_entries WHERE id = ?',
+        'SELECT id, project_id, title, content, source_type, source_file_path FROM knowledge_entries WHERE id = ?',
       )
       .get(entryId) as
       | {
           id: number;
+          project_id: number;
           title: string;
           content: string | null;
           source_type: string | null;
@@ -54,7 +57,7 @@ export async function indexEntry(entryId: number): Promise<IndexingResult> {
       text = entry.content ?? '';
     }
 
-    text = text.trim();
+    text = cleanText(text);
     if (text.length === 0) {
       db.prepare(
         "UPDATE knowledge_entries SET status = 'indexed' WHERE id = ?",
@@ -62,35 +65,67 @@ export async function indexEntry(entryId: number): Promise<IndexingResult> {
       return {entryId, chunkCount: 0, status: 'indexed'};
     }
 
-    // Chunk
-    const chunks = splitText(text, {chunkSize: 800, chunkOverlap: 100});
+    // Semantic chunking
+    const chunks = chunkDocument(text, {chunkSize: 800, chunkOverlap: 100});
+
+    // Score and prepare chunks
+    const scoredChunks = chunks.map((chunk) => {
+      const {score} = scoreChunk(chunk.text, chunk.contentType);
+      return {...chunk, qualityScore: score};
+    });
 
     // Insert chunks
     const insertChunk = db.prepare(
-      'INSERT INTO knowledge_chunks (entry_id, chunk_text, chunk_index) VALUES (?, ?, ?)',
+      `INSERT INTO knowledge_chunks (
+        entry_id, chunk_text, chunk_index, content_hash, token_count,
+        metadata_json, quality_score
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     );
 
-    const chunkIds: number[] = [];
+    const chunkRecords: Array<{
+      id: number;
+      text: string;
+      qualityScore: number;
+    }> = [];
     const transaction = db.transaction(() => {
-      for (let i = 0; i < chunks.length; i++) {
-        const result = insertChunk.run(entryId, chunks[i].text, i);
-        chunkIds.push(Number(result.lastInsertRowid));
+      for (const chunk of scoredChunks) {
+        const result = insertChunk.run(
+          entryId,
+          chunk.text,
+          chunk.index,
+          contentHash(chunk.text),
+          estimateTokenCount(chunk.text),
+          JSON.stringify({
+            content_type: chunk.contentType,
+            ...chunk.metadata,
+          }),
+          chunk.qualityScore,
+        );
+        chunkRecords.push({
+          id: Number(result.lastInsertRowid),
+          text: chunk.text,
+          qualityScore: chunk.qualityScore,
+        });
       }
     });
     transaction();
 
-    // Generate embeddings in batches
-    const batchSize = 32;
-    const allEmbeddings: number[][] = [];
-    for (let i = 0; i < chunks.length; i += batchSize) {
-      const batch = chunks.slice(i, i + batchSize).map((c) => c.text);
-      const result = await embedTexts(batch);
-      allEmbeddings.push(...result.embeddings);
+    // Only embed chunks above quality threshold
+    const embeddable = chunkRecords.filter((c) => c.qualityScore >= 0.3);
+    if (embeddable.length > 0) {
+      const batchSize = 32;
+      const allEmbeddings: number[][] = [];
+      for (let i = 0; i < embeddable.length; i += batchSize) {
+        const batch = embeddable.slice(i, i + batchSize).map((c) => c.text);
+        const result = await embedTexts(batch);
+        allEmbeddings.push(...result.embeddings);
+      }
+      insertChunkVectors(
+        entry.project_id,
+        embeddable.map((c) => c.id),
+        allEmbeddings,
+      );
     }
-
-    // Insert vectors
-    console.log(`Inserting ${chunkIds.length} chunk vectors`);
-    insertChunkVectors(chunkIds, allEmbeddings);
 
     // Mark indexed
     db.prepare(

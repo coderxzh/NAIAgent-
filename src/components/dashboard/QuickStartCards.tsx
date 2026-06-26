@@ -3,50 +3,64 @@ import { useTheme } from '../../hooks/use-theme';
 import { useView } from '../../context/ViewContext';
 import { useAppState } from '../../context/AppStateContext';
 import { FileText, BookOpen, Globe, Sparkles } from 'lucide-react';
+import type { View } from '../../types/domain';
 
-const quickActions = [
-  {
-    title: '生成稿件',
-    description: '基于知识库生成 GEO 优化文章',
-    icon: FileText,
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-50 dark:bg-emerald-950/20',
-  },
-  {
-    title: '更新知识库',
-    description: '上传文档并更新索引',
-    icon: BookOpen,
-    color: 'text-blue-500',
-    bg: 'bg-blue-50 dark:bg-blue-950/20',
-  },
-  {
-    title: '发布到渠道',
-    description: '一键分发到搜狐、网易等平台',
-    icon: Globe,
-    color: 'text-amber-500',
-    bg: 'bg-amber-50 dark:bg-amber-950/20',
-  },
-  {
-    title: 'AI 优化建议',
-    description: '获取智能优化策略',
-    icon: Sparkles,
-    color: 'text-purple-500',
-    bg: 'bg-purple-50 dark:bg-purple-950/20',
-  },
-];
+interface QuickAction {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  bg: string;
+  view: View;
+  params?: Record<string, unknown>;
+}
 
 export default function QuickStartCards() {
   const { cls, t } = useTheme();
   const { navigateTo } = useView();
   const { currentProject } = useAppState();
 
-  const handleAction = (title: string) => {
-    if (title === '更新知识库') {
-      if (currentProject) {
-        navigateTo('kbIngest', { projectId: currentProject.id });
-      } else {
-        navigateTo('projectList');
-      }
+  const quickActions: QuickAction[] = [
+    {
+      title: t.quickStartGenerateDraft,
+      description: t.quickStartGenerateDraftDesc,
+      icon: FileText,
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-50 dark:bg-emerald-950/20',
+      view: 'drafts',
+    },
+    {
+      title: t.quickStartUpdateKb,
+      description: t.quickStartUpdateKbDesc,
+      icon: BookOpen,
+      color: 'text-blue-500',
+      bg: 'bg-blue-50 dark:bg-blue-950/20',
+      view: currentProject ? 'kbIngest' : 'kbCreate',
+      params: currentProject ? { projectId: currentProject.id } : undefined,
+    },
+    {
+      title: t.quickStartPublish,
+      description: t.quickStartPublishDesc,
+      icon: Globe,
+      color: 'text-amber-500',
+      bg: 'bg-amber-50 dark:bg-amber-950/20',
+      view: 'aiWebBuilder',
+    },
+    {
+      title: t.quickStartOptimize,
+      description: t.quickStartOptimizeDesc,
+      icon: Sparkles,
+      color: 'text-purple-500',
+      bg: 'bg-purple-50 dark:bg-purple-950/20',
+      view: 'aiAgent',
+    },
+  ];
+
+  const handleAction = (action: QuickAction) => {
+    if (action.params) {
+      navigateTo(action.view, action.params);
+    } else {
+      navigateTo(action.view);
     }
   };
 
@@ -59,7 +73,7 @@ export default function QuickStartCards() {
           return (
             <button
               key={action.title}
-              onClick={() => handleAction(action.title)}
+              onClick={() => handleAction(action)}
               className={cn(
                 'w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
                 cls(

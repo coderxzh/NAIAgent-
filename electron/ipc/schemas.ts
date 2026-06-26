@@ -59,3 +59,123 @@ export const OpenFileSchema = z.object({
 });
 
 export const AppPathSchema = z.enum(['userData', 'home', 'downloads']);
+
+// Project
+export const ProjectCreateSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  industry: z.string().optional(),
+  region: z.string().optional(),
+});
+
+export const ProjectUpdateSchema = z.object({
+  id: z.number().int().positive(),
+  data: z.record(z.unknown()),
+});
+
+export const ProjectIdSchema = z.number().int().positive();
+
+// Facts
+export const KbFactsUpdateSchema = z.object({
+  id: z.number().int().positive(),
+  status: z.enum(['candidate', 'confirmed', 'rejected', 'deprecated']),
+});
+
+// Assistant
+export const AssistantStreamStartSchema = z.object({
+  sessionId: z.number().int().positive().optional(),
+  projectId: z.number().int().positive().optional(),
+  requestId: z.string().min(1),
+  runType: z.string().optional(),
+});
+
+export const AssistantStreamCancelSchema = z.string().min(1);
+
+export const AssistantHistorySchema = z.object({
+  sessionId: z.number().int().positive(),
+  limit: z.number().int().min(1).max(200).optional(),
+});
+
+export const AssistantQueueListSchema = z.number().int().positive();
+
+export const AssistantQueueUpdateSchema = z.object({
+  itemId: z.number().int().positive(),
+  status: z.string(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+// Tool approvals
+export const ToolApprovalRespondSchema = z.object({
+  approvalId: z.number().int().positive(),
+  approved: z.boolean(),
+  note: z.string().optional(),
+});
+
+// Agent tasks
+export const AgentTaskCreateSchema = z.object({
+  sessionId: z.number().int().positive().optional(),
+  projectId: z.number().int().positive().optional(),
+  title: z.string().optional(),
+  userGoal: z.string().min(1),
+});
+
+export const AgentTaskRunSchema = AgentTaskCreateSchema;
+
+export const AgentTaskIdSchema = z.number().int().positive();
+
+export const AgentTaskListSchema = z.object({
+  projectId: z.number().int().positive().optional(),
+  status: z.string().optional(),
+  limit: z.number().int().min(1).max(200).optional(),
+});
+
+// Drafts / artifacts
+export const DraftListSchema = z.number().int().positive();
+
+export const DraftGetSchema = z.number().int().positive();
+
+export const DraftUpdateSchema = z.object({
+  id: z.number().int().positive(),
+  content: z.string(),
+  status: z.string().optional(),
+});
+
+export const DraftReviewSchema = z.object({
+  id: z.number().int().positive(),
+  approved: z.boolean(),
+  note: z.string().optional(),
+});
+
+// Publish
+export const PublishPlanSchema = z.object({
+  artifactId: z.number().int().positive(),
+  projectId: z.number().int().positive(),
+  channels: z.array(
+    z.object({
+      name: z.string().min(1),
+      platform: z.string().min(1),
+      channelType: z.string().optional(),
+    }),
+  ),
+});
+
+export const PublishApproveSchema = z.object({
+  publishRecordIds: z.array(z.number().int().positive()),
+  approved: z.boolean(),
+});
+
+export const PublishStatusSchema = z.number().int().positive();
+
+// Visibility
+export const VisibilityCheckSchema = z.object({
+  publishRecordId: z.number().int().positive(),
+  query: z.string().optional(),
+});
+
+// Reflection
+export const ReflectionListSchema = z.object({
+  status: z.string().optional(),
+  scope: z.string().optional(),
+});
+
+export const ReflectionIdSchema = z.number().int().positive();

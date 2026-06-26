@@ -4,9 +4,10 @@ import { Toaster } from '@/components/ui/toaster';
 import LayoutShell from './components/layout/LayoutShell';
 import DashboardView from './components/dashboard/DashboardView';
 import ChatInterface from './components/chat/ChatInterface';
-import PlaceholderView from './components/layout/PlaceholderView';
+import DraftsView from './components/drafts/DraftsView';
+import AutoLearningView from './components/auto-learning/AutoLearningView';
+import AiWebBuilderView from './components/ai-web-builder/AiWebBuilderView';
 import ErrorBoundary from './components/ErrorBoundary';
-import ProjectList from './components/projects/ProjectList';
 import KbIngestPanel from './components/knowledge-base/KbIngestPanel';
 import KbCreateView from './components/knowledge-base/KbCreateView';
 import type { View } from './types/domain';
@@ -14,17 +15,16 @@ import type { View } from './types/domain';
 function KbIngestWrapper() {
   const { viewParams } = useView();
   const projectId = viewParams.projectId as number | undefined;
-  if (!projectId) return <PlaceholderView />;
+  if (!projectId) return <AiWebBuilderView />;
   return <KbIngestPanel projectId={projectId} />;
 }
 
 const viewComponents: Record<View, React.ComponentType> = {
   dashboard: DashboardView,
   aiAgent: ChatInterface,
-  drafts: PlaceholderView,
-  autoLearning: PlaceholderView,
-  aiWebBuilder: PlaceholderView,
-  projectList: ProjectList,
+  drafts: DraftsView,
+  autoLearning: AutoLearningView,
+  aiWebBuilder: AiWebBuilderView,
   kbIngest: KbIngestWrapper,
   kbCreate: KbCreateView,
 };

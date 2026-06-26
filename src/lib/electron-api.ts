@@ -26,6 +26,11 @@ export const dialogApi = {
     api.invoke('dialog:openFile', options),
 };
 
+export const appApi = {
+  getPath: (name: Parameters<IpcChannels['app:getPath']>[0]) =>
+    api.invoke('app:getPath', name),
+};
+
 export const kbApi = {
   ingestText: (projectId: number, title: string, content: string) =>
     api.invoke('kb:ingestText', {projectId, title, content}),
@@ -34,6 +39,9 @@ export const kbApi = {
   indexEntry: (entryId: number) => api.invoke('kb:indexEntry', {entryId}),
   search: (projectId: number, query: string, limit?: number) =>
     api.invoke('kb:search', {projectId, query, limit}),
+  facts: (projectId: number) => api.invoke('kb:facts', projectId),
+  factsUpdate: (id: number, status: Parameters<IpcChannels['kb:factsUpdate']>[1]) =>
+    api.invoke('kb:factsUpdate', id, status),
 };
 
 export const ragApi = {
@@ -41,7 +49,78 @@ export const ragApi = {
     api.invoke('rag:ask', {projectId, query, limit}),
 };
 
-export const appApi = {
-  getPath: (name: Parameters<IpcChannels['app:getPath']>[0]) =>
-    api.invoke('app:getPath', name),
+export const projectApi = {
+  create: (data: Parameters<IpcChannels['project:create']>[0]) => api.invoke('project:create', data),
+  list: () => api.invoke('project:list'),
+  get: (id: number) => api.invoke('project:get', id),
+  update: (id: number, data: Parameters<IpcChannels['project:update']>[1]) =>
+    api.invoke('project:update', id, data),
+  delete: (id: number) => api.invoke('project:delete', id),
+};
+
+export const assistantApi = {
+  streamStart: (params: Parameters<IpcChannels['assistant:streamStart']>[0]) =>
+    api.invoke('assistant:streamStart', params),
+  streamCancel: (requestId: string) =>
+    api.invoke('assistant:streamCancel', requestId),
+  history: (sessionId: number, limit?: number) =>
+    api.invoke('assistant:history', sessionId, limit),
+  queueList: (runId: number) => api.invoke('assistant:queueList', runId),
+  queueUpdate: (
+    itemId: number,
+    status: string,
+    metadata?: Record<string, unknown>,
+  ) => api.invoke('assistant:queueUpdate', itemId, status, metadata),
+};
+
+export const toolApprovalApi = {
+  respond: (approvalId: number, approved: boolean, note?: string) =>
+    api.invoke('toolApproval:respond', approvalId, approved, note),
+  listPending: () => api.invoke('toolApproval:listPending'),
+};
+
+export const agentTaskApi = {
+  create: (params: Parameters<IpcChannels['agentTask:create']>[0]) =>
+    api.invoke('agentTask:create', params),
+  run: (params: Parameters<IpcChannels['agentTask:run']>[0]) =>
+    api.invoke('agentTask:run', params),
+  get: (id: number) => api.invoke('agentTask:get', id),
+  list: (filters?: Parameters<IpcChannels['agentTask:list']>[0]) => api.invoke('agentTask:list', filters),
+  resume: (id: number) => api.invoke('agentTask:resume', id),
+  pause: (id: number) => api.invoke('agentTask:pause', id),
+  cancel: (id: number) => api.invoke('agentTask:cancel', id),
+  retry: (id: number) => api.invoke('agentTask:retry', id),
+  timeline: (id: number) => api.invoke('agentTask:timeline', id),
+  artifacts: (id: number) => api.invoke('agentTask:artifacts', id),
+};
+
+export const draftApi = {
+  list: (projectId: number) => api.invoke('draft:list', projectId),
+  get: (id: number) => api.invoke('draft:get', id),
+  update: (id: number, content: string, status?: string) =>
+    api.invoke('draft:update', id, content, status),
+  review: (id: number, approved: boolean, note?: string) =>
+    api.invoke('draft:review', id, approved, note),
+};
+
+export const publishApi = {
+  plan: (params: Parameters<IpcChannels['publish:plan']>[0]) =>
+    api.invoke('publish:plan', params),
+  approve: (params: Parameters<IpcChannels['publish:approve']>[0]) =>
+    api.invoke('publish:approve', params),
+  status: (publishRecordId: number) =>
+    api.invoke('publish:status', publishRecordId),
+};
+
+export const visibilityApi = {
+  check: (params: Parameters<IpcChannels['visibility:check']>[0]) =>
+    api.invoke('visibility:check', params),
+};
+
+export const reflectionApi = {
+  list: (filters?: Parameters<IpcChannels['reflection:list']>[0]) =>
+    api.invoke('reflection:list', filters),
+  approve: (id: number) => api.invoke('reflection:approve', id),
+  reject: (id: number) => api.invoke('reflection:reject', id),
+  archive: (id: number) => api.invoke('reflection:archive', id),
 };

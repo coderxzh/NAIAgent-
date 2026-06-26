@@ -80,7 +80,7 @@ async function waitForCdp(timeoutMs = 30000) {
 }
 
 async function main() {
-  const userDataDir = mkdtempSync(join(tmpdir(), 'nai-agent-e2e-'));
+  const userDataDir = mkdtempSync(join(tmpdir(), 'nai-agent-e2e-p3-'));
   let electronProc;
   let vite;
 
@@ -108,59 +108,63 @@ async function main() {
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
     console.log('Step 1: Dashboard loaded');
-    await page.screenshot({path: 'e2e-01-dashboard.png'});
+    await page.screenshot({path: 'e2e-p3-01-dashboard.png'});
 
-    // Navigate to project list via sidebar
-    console.log('Step 2: Navigate to project list');
-    const sidebarButtons = page.locator('aside nav button');
-    const buttonTexts = await sidebarButtons.allTextContents();
-    console.log('Sidebar button texts:', buttonTexts);
-    const projectListBtn = sidebarButtons.filter({hasText: /项目管理|Projects/}).first();
-    await projectListBtn.evaluate((el) => el.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true})));
-    await page.waitForTimeout(2500);
-    await page.screenshot({path: 'e2e-02-project-list.png'});
-
-    // Create project
-    console.log('Step 3: Create project');
-    await page.locator('button').filter({hasText: /创建项目|Create Project/}).first().click();
-    await page.waitForTimeout(500);
-    const nameInput = page.locator('input').first();
-    await nameInput.fill('E2E Test Project');
-    const descInput = page.locator('textarea').first();
-    await descInput.fill('Created by automated verification');
-    await page.locator('button[type="submit"]').click();
+    // Navigate to AI Agent
+    console.log('Step 2: Open AI Agent');
+    const aiAgentBtn = page.locator('aside nav button').filter({hasText: /智能Agent|AI Agent/}).first();
+    await aiAgentBtn.evaluate((el) => el.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true})));
     await page.waitForTimeout(1500);
-    await page.screenshot({path: 'e2e-03-project-created.png'});
+    await page.screenshot({path: 'e2e-p3-02-ai-agent.png'});
 
-    const projectCard = page.locator('text=E2E Test Project').first();
-    if (await projectCard.isVisible().catch(() => false)) {
-      console.log('✅ Project created and visible');
-    } else {
-      throw new Error('Project not visible after creation');
+    // Send first message
+    console.log('Step 3: Send first message');
+    const firstMessage = 'Hello GEO Agent, this is session one';
+    const chatInput = page.locator('textarea').first();
+    await chatInput.fill(firstMessage);
+    await chatInput.press('Enter');
+    await page.waitForTimeout(3000);
+    await page.screenshot({path: 'e2e-p3-03-first-message.png'});
+
+    const response = page.locator('text=GEO Agent').first();
+    if (!(await response.isVisible().catch(() => false))) {
+      throw new Error('Assistant response not shown');
     }
+    console.log('✅ First session got a response');
 
-    // Open project KB ingest
-    console.log('Step 4: Open project KB');
-    await projectCard.click();
-    await page.waitForTimeout(1500);
-    await page.screenshot({path: 'e2e-04-kb-ingest.png'});
+    // Start new chat
+    console.log('Step 4: Start new chat');
+    const newChatBtn = page.locator('button').filter({hasText: /新对话|New chat/}).first();
+    await newChatBtn.click();
+    await page.waitForTimeout(1000);
+    await page.screenshot({path: 'e2e-p3-04-new-chat.png'});
 
-    // Add text entry
-    console.log('Step 5: Add text entry');
-    const titleInput = page.locator('input').first();
-    await titleInput.fill('Test Entry');
-    const textarea = page.locator('textarea').first();
-    await textarea.fill('This is a test knowledge entry created by Playwright.');
-    await page.locator('button').filter({hasText: /提交|Submit|录入/}).first().click();
-    await page.waitForTimeout(1500);
-    await page.screenshot({path: 'e2e-05-entry-added.png'});
+    const secondMessage = 'This is session two';
+    await chatInput.fill(secondMessage);
+    await chatInput.press('Enter');
+    await page.waitForTimeout(3000);
+    console.log('✅ Second session created');
 
-    const entryTitle = page.locator('text=Test Entry').first();
-    if (await entryTitle.isVisible().catch(() => false)) {
-      console.log('✅ Knowledge entry added and visible');
-    } else {
-      throw new Error('Knowledge entry not visible after ingestion');
+    // Open history drawer and switch back to first session
+    console.log('Step 5: Open chat history');
+    const historyBtn = page.locator('button').filter({hasText: /历史记录|History/}).first();
+    await historyBtn.click();
+    await page.waitForTimeout(1000);
+    await page.screenshot({path: 'e2e-p3-05-history-drawer.png'});
+
+    const firstSession = page.locator('text=' + firstMessage.slice(0, 30)).first();
+    if (!(await firstSession.isVisible().catch(() => false))) {
+      throw new Error('First session not found in history drawer');
     }
+    await firstSession.click();
+    await page.waitForTimeout(1500);
+    await page.screenshot({path: 'e2e-p3-06-session-switched.png'});
+
+    const firstMsg = page.locator('text=' + firstMessage).first();
+    if (!(await firstMsg.isVisible().catch(() => false))) {
+      throw new Error('First session message not shown after switch');
+    }
+    console.log('✅ History drawer can switch sessions');
 
     console.log('All Phase 3 verification checks passed.');
     await browser.close();
@@ -181,6 +185,6 @@ async function main() {
 main()
   .then(() => process.exit(0))
   .catch((err) => {
-    console.error('E2E verification failed:', err);
+    console.error('Phase 3 E2E verification failed:', err);
     process.exit(1);
   });

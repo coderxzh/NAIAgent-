@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '../../hooks/use-theme';
 import StatCards from './StatCards';
@@ -7,16 +6,13 @@ import ActionItemsPanel from './ActionItemsPanel';
 import RecentActivityFeed from './RecentActivityFeed';
 import QuickStartCards from './QuickStartCards';
 import KbHealthPanel from './KbHealthPanel';
-import { mockDashboardData } from './mock-data';
+import VisibilityPanel from './VisibilityPanel';
+import HypothesisPanel from './HypothesisPanel';
+import { useDashboardData } from './useDashboardData';
 
 export default function DashboardView() {
   const { t, cls } = useTheme();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 600);
-    return () => clearTimeout(timer);
-  }, []);
+  const { stats, trend, actions, activities, kbHealth, kbAssets, visibilityChecks, hypothesisRules, loading } = useDashboardData();
 
   return (
     <div className="space-y-6">
@@ -29,19 +25,24 @@ export default function DashboardView() {
         </p>
       </div>
 
-      <StatCards stats={mockDashboardData.stats} loading={loading} />
+      <StatCards stats={stats} loading={loading} />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
-          <ActivityChart data={mockDashboardData.trend} loading={loading} />
+          <ActivityChart data={trend} loading={loading} />
         </div>
-        <ActionItemsPanel items={mockDashboardData.actions} loading={loading} />
+        <ActionItemsPanel items={actions} loading={loading} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <RecentActivityFeed items={mockDashboardData.activities} loading={loading} />
+        <RecentActivityFeed items={activities} loading={loading} />
         <QuickStartCards />
-        <KbHealthPanel health={mockDashboardData.kbHealth} assets={mockDashboardData.kbAssets} loading={loading} />
+        <KbHealthPanel health={kbHealth} assets={kbAssets} loading={loading} />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <VisibilityPanel checks={visibilityChecks} loading={loading} />
+        <HypothesisPanel rules={hypothesisRules} loading={loading} />
       </div>
     </div>
   );

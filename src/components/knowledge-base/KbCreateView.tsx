@@ -151,7 +151,7 @@ export default function KbCreateView() {
     if (createdProjectId) {
       navigateTo('kbIngest', {projectId: createdProjectId});
     } else {
-      navigateTo('projectList');
+      navigateTo('dashboard');
     }
   };
 
@@ -285,9 +285,9 @@ export default function KbCreateView() {
         项目“{projectName}”已创建，共录入 {entryCount} 条资料。
       </p>
       <div className="mt-6 flex justify-center gap-3">
-        <Button variant="outline" onClick={() => navigateTo('projectList')} className="gap-2">
+        <Button variant="outline" onClick={() => navigateTo('dashboard')} className="gap-2">
           <ArrowLeft className="w-4 h-4" />
-          返回项目列表
+          返回仪表盘
         </Button>
         <Button onClick={handleFinish} className="gap-2">
           进入知识库

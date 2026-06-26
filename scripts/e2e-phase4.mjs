@@ -119,60 +119,45 @@ async function main() {
     console.log('Step 1: Dashboard loaded');
     await page.screenshot({path: 'e2e-p4-01-dashboard.png'});
 
-    // Navigate to project list via sidebar
-    console.log('Step 2: Navigate to project list');
-    const sidebarButtons = page.locator('aside nav button');
-    const projectListBtn = sidebarButtons.filter({hasText: /项目管理|Projects/}).first();
-    await projectListBtn.evaluate((el) => el.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true})));
-    await page.waitForTimeout(2500);
-    await page.screenshot({path: 'e2e-p4-02-project-list.png'});
+    // Open "create enterprise KB" via the enterprise + button in sidebar
+    console.log('Step 2: Open create enterprise KB');
+    const addProjectBtn = page.locator('aside button').filter({has: page.locator('svg.lucide-plus')}).first();
+    await addProjectBtn.evaluate((el) => el.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true})));
+    await page.waitForTimeout(1500);
+    await page.screenshot({path: 'e2e-p4-02-kb-create.png'});
 
-    // Create project
-    console.log('Step 3: Create project');
-    await page.locator('button').filter({hasText: /创建项目|Create Project/}).first().click();
-    await page.waitForTimeout(500);
+    // Fill company info and knowledge text
+    console.log('Step 3: Create project and ingest knowledge');
     await page.locator('input').first().fill('Phase4 E2E Project');
-    await page.locator('textarea').first().fill('Project for Phase 4 vector search verification');
-    await page.locator('button[type="submit"]').click();
-    await page.waitForTimeout(1500);
-    await page.screenshot({path: 'e2e-p4-03-project-created.png'});
-
-    const projectCard = page.locator('text=Phase4 E2E Project').first();
-    if (!(await projectCard.isVisible().catch(() => false))) {
-      throw new Error('Project not visible after creation');
-    }
-    console.log('✅ Project created');
-
-    // Open project KB ingest
-    console.log('Step 4: Open project KB');
-    await projectCard.click();
-    await page.waitForTimeout(1500);
-    await page.screenshot({path: 'e2e-p4-04-kb-ingest.png'});
-
-    // Add text entry with clear facts
-    console.log('Step 5: Add knowledge text entry');
-    await page.locator('input').first().fill('Company Overview');
-    const textarea = page.locator('textarea').first();
     const companyText = `GEO Agent is an enterprise GEO optimization platform developed by NAI Labs in 2024.
 It helps companies improve their visibility in AI-generated search results.
 The platform supports knowledge base management, content generation, and visibility tracking.
 NAI Labs is headquartered in Hangzhou, China.
 The main product colors are orange (#F37021) and dark gray.`;
-    await textarea.fill(companyText);
-    await page.locator('button').filter({hasText: /提交|Submit|录入/}).first().click();
+    await page.locator('textarea').last().fill(companyText);
+    await page.locator('button').filter({hasText: /创建项目并录入/}).first().click();
+
+    // Wait for creation to finish
+    await page.waitForSelector('text=企业知识库已建立', {timeout: 30000});
+    await page.screenshot({path: 'e2e-p4-03-project-created.png'});
+    console.log('✅ Project created');
+
+    // Enter knowledge base
+    console.log('Step 4: Enter knowledge base');
+    await page.locator('button').filter({hasText: /进入知识库/}).first().click();
+    await page.waitForTimeout(1500);
+    await page.screenshot({path: 'e2e-p4-04-kb-ingest.png'});
 
     // Wait for indexing to complete (status badge changes to 已索引)
-    console.log('Step 6: Wait for indexing');
+    console.log('Step 5: Wait for indexing');
     let indexed = false;
     for (let i = 0; i < 60; i++) {
       await page.reload();
       await page.waitForTimeout(1000);
 
-      // Re-enter project KB after reload to restore currentProject in React state
-      const projectListBtn = page.locator('aside nav button').filter({hasText: /项目管理|Projects/}).first();
-      await projectListBtn.evaluate((el) => el.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true})));
-      await page.waitForTimeout(800);
-      await page.locator('text=Phase4 E2E Project').first().evaluate((el) => el.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true})));
+      // Re-enter project KB after reload by clicking the project in the sidebar enterprise list
+      const projectBtn = page.locator('aside nav button').filter({hasText: /Phase4 E2E Project/}).first();
+      await projectBtn.evaluate((el) => el.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true})));
       await page.waitForTimeout(800);
 
       const indexedBadge = page.locator('text=已索引').first();
@@ -192,7 +177,7 @@ The main product colors are orange (#F37021) and dark gray.`;
     console.log('✅ Entry indexed');
 
     // Navigate to AI Agent and ask a question
-    console.log('Step 7: Ask question in AI Agent');
+    console.log('Step 6: Ask question in AI Agent');
     const aiAgentBtn = page.locator('aside nav button').filter({hasText: /智能Agent|AI Agent/}).first();
     await aiAgentBtn.evaluate((el) => el.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true})));
     await page.waitForTimeout(2000);

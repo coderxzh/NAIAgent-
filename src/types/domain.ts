@@ -5,16 +5,41 @@ export type View =
   | 'drafts'
   | 'autoLearning'
   | 'aiWebBuilder'
-  | 'projectList'
   | 'kbIngest'
   | 'kbCreate';
 
 // 通用状态枚举
-export type RunStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type TaskStatus =
+  | 'created'
+  | 'planning'
+  | 'running'
+  | 'waiting_user_input'
+  | 'waiting_approval'
+  | 'waiting_external_result'
+  | 'paused'
+  | 'retrying'
+  | 'completed'
+  | 'failed'
+  | 'cancelled';
+
+export type StepStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type StepType =
+  | 'plan'
+  | 'tool_call'
+  | 'skill_call'
+  | 'subagent_call'
+  | 'validation'
+  | 'approval_request'
+  | 'artifact_write'
+  | 'retry'
+  | 'recovery'
+  | 'final_response';
+
 export type PublishStatus = 'pending' | 'published' | 'failed';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
-export type FactStatus = 'draft' | 'confirmed';
+export type FactStatus = 'candidate' | 'confirmed' | 'rejected' | 'deprecated';
 export type ChatRole = 'user' | 'assistant' | 'system';
+export type ReflectionHypothesisStatus = 'candidate' | 'active' | 'degraded' | 'archived' | 'rejected';
 
 // 知识库向量检索结果
 export interface KnowledgeSearchResult {
@@ -41,17 +66,11 @@ export interface Project {
   id: number;
   name: string;
   description: string | null;
+  industry?: string | null;
+  region?: string | null;
+  status?: string | null;
   created_at: string;
   updated_at: string;
-}
-
-// 知识库
-export interface KnowledgeBase {
-  id: number;
-  project_id: number;
-  name: string;
-  description: string | null;
-  created_at: string;
 }
 
 export type KnowledgeEntryStatus = 'pending' | 'indexed' | 'failed';
@@ -59,11 +78,12 @@ export type KnowledgeEntryStatus = 'pending' | 'indexed' | 'failed';
 // 知识库原始条目
 export interface KnowledgeEntry {
   id: number;
-  kb_id: number;
+  project_id: number;
   title: string;
   content: string | null;
   source_type: string | null;
   source_file_path: string | null;
+  metadata_json: string | null;
   status: KnowledgeEntryStatus;
   created_at: string;
 }
@@ -74,6 +94,10 @@ export interface KnowledgeChunk {
   entry_id: number;
   chunk_text: string;
   chunk_index: number;
+  content_hash: string | null;
+  token_count: number | null;
+  metadata_json: string | null;
+  quality_score: number;
   created_at: string;
 }
 
@@ -91,102 +115,135 @@ export interface EnterpriseFact {
   fact_key: string;
   fact_value: string | null;
   confidence: number;
+  source_entry_id: number | null;
+  source_chunk_id: number | null;
+  source_quote: string | null;
+  extraction_model: string | null;
+  extraction_prompt_version: string | null;
   status: FactStatus;
   created_at: string;
 }
 
-// 聊天会话
+// 聊天会话（公共会话，不绑定 project）
 export interface ChatSession {
   id: number;
-  project_id: number | null;
   title: string | null;
   session_type: string;
   created_at: string;
+  updated_at?: string;
+  last_provider_response_id?: string | null;
 }
 
-// 聊天消息
+// 聊天消息（记录消息发生时的 project_id）
 export interface ChatMessage {
   id: number;
   session_id: number;
+  project_id: number | null;
   role: ChatRole;
   content: string;
   model: string | null;
+  intent?: string | null;
+  metadata_json?: string | null;
+  render_json?: string | null;
   created_at: string;
 }
 
-// GEO 工作流运行
-export interface GeoRun {
+// 生成产物（稿件/报告/计划等）
+export interface AgentArtifact {
   id: number;
+  task_id: number | null;
   project_id: number;
-  knowledge_base_id: number | null;
-  status: RunStatus;
-  created_at: string;
-}
-
-// GEO 运行步骤
-export interface GeoRunStep {
-  id: number;
-  run_id: number;
-  step_type: string;
-  step_data: string | null;
-  status: RunStatus;
-  created_at: string;
-}
-
-// 生成产物（稿件/文章）
-export interface GeoArtifact {
-  id: number;
-  run_id: number;
   artifact_type: string;
   title: string | null;
   content: string | null;
+  metadata_json: string | null;
+  status: string;
   created_at: string;
+  updated_at: string;
 }
 
-// 人工确认
-export interface HumanApproval {
+// 人工确认（Assistant Runtime 工具审批）
+export interface ToolApproval {
   id: number;
-  artifact_id: number;
+  tool_call_id: number;
+  requested_by: string;
   approval_type: string;
   status: ApprovalStatus;
-  created_at: string;
+  reviewer_note: string | null;
+  requested_at: string;
+  reviewed_at: string | null;
 }
 
 // 发布记录
 export interface PublishRecord {
   id: number;
   artifact_id: number;
+  project_id: number;
+  channel_name: string;
+  channel_type?: string | null;
+  publish_title?: string | null;
   platform: string | null;
   status: PublishStatus;
+  external_id?: string | null;
+  published_url: string | null;
+  estimated_price?: number | null;
+  actual_price?: number | null;
+  published_at?: string | null;
   created_at: string;
 }
 
 // 可见性检测
 export interface VisibilityCheck {
   id: number;
-  publish_record_id: number;
+  project_id?: number | null;
+  artifact_id?: number | null;
+  publish_record_id?: number | null;
+  target_engine?: string | null;
+  check_provider?: string | null;
+  check_api_mode?: string | null;
+  check_tool_type?: string | null;
+  check_feature?: string | null;
+  check_method?: string | null;
+  provider_response_id?: string | null;
   query: string | null;
+  published_url?: string | null;
+  mentioned?: boolean;
+  cited?: boolean;
+  citation_urls_json?: string | null;
+  answer_text?: string | null;
+  search_summary?: string | null;
+  matched_snippets_json?: string | null;
+  confidence?: number | null;
+  raw_response_json?: string | null;
+  // v1.4.2 之前字段，保留兼容
   rank: number | null;
+  response_text: string | null;
+  matched: boolean;
+  matched_url: string | null;
+  matched_quote: string | null;
   checked_at: string;
-}
-
-// 反思规则
-export interface ReflectionRule {
-  id: number;
-  scope: string;
-  industry: string | null;
-  rule_text: string;
-  status: string;
-  created_at: string;
 }
 
 // 模型调用日志
 export interface ModelCallLog {
   id: number;
+  run_id?: number | null;
+  stage?: string | null;
   model: string | null;
+  provider?: string | null;
+  api_mode?: string | null;
   prompt_tokens: number | null;
   completion_tokens: number | null;
-  duration_ms: number | null;
+  latency_ms?: number | null;
+  cost_estimate?: number | null;
+  status?: string | null;
+  error_message?: string | null;
+  provider_response_id?: string | null;
+  previous_response_id?: string | null;
+  provider_event_id?: string | null;
+  skill_name?: string | null;
+  prompt_version?: string | null;
+  retry_count?: number;
   created_at: string;
 }
 
@@ -195,6 +252,342 @@ export interface AppSetting {
   key: string;
   value: string | null;
   updated_at: string;
+}
+
+// Assistant Runtime
+export interface AssistantRun {
+  id: number;
+  session_id: number;
+  project_id: number | null;
+  request_id: string;
+  run_type: string;
+  status: string;
+  current_step: string | null;
+  provider: string | null;
+  provider_api: string | null;
+  provider_response_id: string | null;
+  previous_response_id: string | null;
+  input_json: string | null;
+  output_json: string | null;
+  error_id: number | null;
+  started_at: string;
+  completed_at: string | null;
+  updated_at: string;
+}
+
+export interface AssistantStreamEventRecord {
+  id: number;
+  session_id: number | null;
+  message_id: number | null;
+  run_id: number | null;
+  request_id: string;
+  event_type: string;
+  event_json: string;
+  created_at: string;
+}
+
+export interface AssistantToolCall {
+  id: number;
+  session_id: number | null;
+  run_id: number | null;
+  message_id: number | null;
+  project_id: number | null;
+  provider: string | null;
+  provider_api: string | null;
+  provider_tool_call_id: string | null;
+  tool_name: string;
+  tool_namespace: string | null;
+  arguments_json: string | null;
+  result_json: string | null;
+  result_summary: string | null;
+  status: string;
+  approval_required: boolean;
+  approval_id: number | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssistantQueueItem {
+  id: number;
+  session_id: number | null;
+  run_id: number | null;
+  parent_id: number | null;
+  item_type: string;
+  title: string;
+  description: string | null;
+  status: string;
+  order_index: number;
+  collapsible: boolean;
+  collapsed: boolean;
+  metadata_json: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssistantReasoningStep {
+  id: number;
+  session_id: number | null;
+  run_id: number | null;
+  message_id: number | null;
+  title: string;
+  content: string | null;
+  status: string;
+  order_index: number;
+  metadata_json: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Agent-first Task Runtime
+export interface AgentTask {
+  id: number;
+  session_id: number | null;
+  project_id: number | null;
+  title: string | null;
+  user_goal: string;
+  status: TaskStatus;
+  current_objective: string | null;
+  last_action: string | null;
+  risk_level: string | null;
+  allowed_actions_json: string | null;
+  context_snapshot_json: string | null;
+  budget_json: string | null;
+  usage_json: string | null;
+  failure_count: number;
+  loop_count: number;
+  max_loop_count: number;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+export interface AgentTaskStep {
+  id: number;
+  task_id: number;
+  parent_step_id: number | null;
+  step_type: StepType;
+  action_name: string | null;
+  status: StepStatus;
+  input_json: string | null;
+  output_json: string | null;
+  validation_json: string | null;
+  error_id: number | null;
+  attempt_count: number;
+  max_attempts: number;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface ExecutionLedgerEntry {
+  id: number;
+  task_id: number | null;
+  step_id: number | null;
+  project_id: number | null;
+  actor: string;
+  event_type: string;
+  event_name: string | null;
+  payload_json: string | null;
+  created_at: string;
+}
+
+export interface AgentLock {
+  id: number;
+  lock_key: string;
+  task_id: number;
+  owner: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface AgentFailure {
+  id: number;
+  task_id: number;
+  step_id: number | null;
+  error_type: string;
+  message: string;
+  context_json: string | null;
+  created_at: string;
+}
+
+export interface AppError {
+  id: number;
+  error_code: string | null;
+  error_type: string;
+  message: string;
+  stack_trace: string | null;
+  context_json: string | null;
+  recoverable: boolean;
+  retryable: boolean;
+  task_id: number | null;
+  step_id: number | null;
+  run_id: number | null;
+  created_at: string;
+}
+
+export type GeoNextAction =
+  | 'create_project'
+  | 'ingest_knowledge'
+  | 'search_knowledge'
+  | 'extract_facts'
+  | 'request_fact_review'
+  | 'generate_questions'
+  | 'recommend_sources'
+  | 'generate_article'
+  | 'review_article'
+  | 'revise_article'
+  | 'create_publish_plan'
+  | 'request_publish_approval'
+  | 'publish_article'
+  | 'check_visibility'
+  | 'generate_reflection_candidates'
+  | 'request_hypothesis_review'
+  | 'answer_user'
+  | 'ask_user_for_missing_info'
+  | 'summarize_task'
+  | 'recover_from_error';
+
+export interface AgentDecision {
+  intent: string;
+  current_objective: string;
+  selected_action: GeoNextAction;
+  reason: string;
+  required_tools: string[];
+  expected_artifacts: string[];
+  risk_level: 'low' | 'medium' | 'high';
+  requires_user_input: boolean;
+  user_question?: string;
+  completion_criteria: string[];
+}
+
+export interface GeoAgentContext {
+  project?: Project;
+  task?: AgentTask;
+  userGoal: string;
+  knowledgeState: {
+    hasEntries: boolean;
+    entryCount: number;
+    chunkCount: number;
+    vectorIndexStatus: 'ready' | 'missing' | 'needs_reindex' | 'building' | 'failed';
+  };
+  factState: {
+    confirmedFactsCount: number;
+    candidateFactsCount: number;
+    missingFields: string[];
+    needsReviewCount: number;
+  };
+  articleState: {
+    hasDraft: boolean;
+    draftStatus?: 'draft' | 'reviewing' | 'approved' | 'rejected';
+    reviewPassed?: boolean;
+    unsupportedClaimCount?: number;
+  };
+  publishState: {
+    hasPublishPlan: boolean;
+    publishApproved: boolean;
+    published: boolean;
+    publishRecordId?: number;
+  };
+  visibilityState: {
+    checked: boolean;
+    cited?: boolean;
+    mentioned?: boolean;
+    inconclusive?: boolean;
+    lastCheckedAt?: string;
+  };
+  reflectionState: {
+    candidateCount: number;
+    activeCount: number;
+    pendingReviewCount: number;
+  };
+  recentFailures: AgentFailure[];
+  allowedActions: GeoNextAction[];
+}
+
+// Message Parts（用于 chat_messages.render_json 恢复）
+export type MessagePart =
+  | { type: 'text'; content: string }
+  | { type: 'markdown'; content: string }
+  | { type: 'attachment'; attachmentIds: number[] }
+  | { type: 'tool_call'; toolCallId: number }
+  | { type: 'approval_request'; approvalId: number }
+  | { type: 'artifact'; artifactId: number; artifactType: string; title: string }
+  | { type: 'sources'; evidencePackId: number }
+  | { type: 'reasoning_steps'; stepIds: number[] }
+  | { type: 'queue'; queueItemIds: number[] }
+  | { type: 'error'; errorId: number };
+
+// 反思假设系统
+export interface ReflectionHypothesis {
+  id: number;
+  scope: string;
+  industry: string | null;
+  channel_name: string | null;
+  target_stage: string;
+  hypothesis_type: string;
+  content: string;
+  positive_examples: number;
+  negative_examples: number;
+  sample_size: number;
+  effect_score: number;
+  confidence: number;
+  status: ReflectionHypothesisStatus;
+  last_validated_at: string | null;
+  decay_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReflectionHypothesisEvidence {
+  id: number;
+  hypothesis_id: number;
+  project_id: number;
+  artifact_id: number | null;
+  visibility_check_id: number | null;
+  evidence_type: string;
+  evidence_json: string | null;
+  created_at: string;
+}
+
+// 检索日志
+export interface RetrievalLog {
+  id: number;
+  project_id: number;
+  query: string;
+  fact_hit_count: number;
+  keyword_hit_count: number;
+  vector_hit_count: number;
+  selected_evidence_json: string | null;
+  created_at: string;
+}
+
+// Evidence Pack
+export interface KeywordHit {
+  chunkId: number;
+  entryId: number;
+  entryTitle: string;
+  chunkText: string;
+  rank: number;
+}
+
+export interface VectorHit {
+  chunkId: number;
+  entryId: number;
+  entryTitle: string;
+  chunkText: string;
+  distance: number;
+}
+
+export interface EvidencePack {
+  projectId: number;
+  query: string;
+  facts: EnterpriseFact[];
+  chunks: KnowledgeChunk[];
+  keywordHits: KeywordHit[];
+  vectorHits: VectorHit[];
+  missingFields: string[];
+  riskWarnings: string[];
 }
 
 // 领域聚合类型（供 UI 使用）

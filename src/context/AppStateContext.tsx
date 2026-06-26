@@ -1,18 +1,15 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 import type {
+  AgentTask,
   ChatSession,
-  GeoRun,
-  KnowledgeBase,
   Project,
 } from '../types/domain';
 
 interface AppStateContextValue {
   currentProject: Project | null;
   setCurrentProject: (project: Project | null) => void;
-  currentKnowledgeBase: KnowledgeBase | null;
-  setCurrentKnowledgeBase: (kb: KnowledgeBase | null) => void;
-  currentRun: GeoRun | null;
-  setCurrentRun: (run: GeoRun | null) => void;
+  currentAgentTask: AgentTask | null;
+  setCurrentAgentTask: (task: AgentTask | null) => void;
   currentChatSession: ChatSession | null;
   setCurrentChatSession: (session: ChatSession | null) => void;
   refreshProjects: number;
@@ -23,9 +20,7 @@ const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
-  const [currentKnowledgeBase, setCurrentKnowledgeBase] =
-    useState<KnowledgeBase | null>(null);
-  const [currentRun, setCurrentRun] = useState<GeoRun | null>(null);
+  const [currentAgentTask, setCurrentAgentTask] = useState<AgentTask | null>(null);
   const [currentChatSession, setCurrentChatSession] =
     useState<ChatSession | null>(null);
   const [refreshProjects, setRefreshProjects] = useState(0);
@@ -34,16 +29,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     () => ({
       currentProject,
       setCurrentProject,
-      currentKnowledgeBase,
-      setCurrentKnowledgeBase,
-      currentRun,
-      setCurrentRun,
+      currentAgentTask,
+      setCurrentAgentTask,
       currentChatSession,
       setCurrentChatSession,
       refreshProjects,
       triggerRefreshProjects: () => setRefreshProjects((v) => v + 1),
     }),
-    [currentProject, currentKnowledgeBase, currentRun, currentChatSession, refreshProjects],
+    [currentProject, currentAgentTask, currentChatSession, refreshProjects],
   );
 
   return (

@@ -2,22 +2,53 @@ import {app, ipcMain, dialog, BrowserWindow} from 'electron';
 import {getDb} from '../db/connection.ts';
 import {runMigrations} from '../db/migrations.ts';
 import {
+  AgentTaskCreateSchema,
+  AgentTaskIdSchema,
+  AgentTaskListSchema,
+  AgentTaskRunSchema,
   AppPathSchema,
+  AssistantHistorySchema,
+  AssistantQueueListSchema,
+  AssistantQueueUpdateSchema,
+  AssistantStreamCancelSchema,
+  AssistantStreamStartSchema,
   DbExecSchema,
   DbQuerySchema,
+  DraftGetSchema,
+  DraftListSchema,
+  DraftReviewSchema,
+  DraftUpdateSchema,
+  KbFactsUpdateSchema,
   KbIndexEntrySchema,
   KbIngestFileSchema,
   KbIngestTextSchema,
   KbSearchSchema,
   OpenFileSchema,
+  ProjectCreateSchema,
+  ProjectIdSchema,
+  ProjectUpdateSchema,
+  PublishApproveSchema,
+  PublishPlanSchema,
+  PublishStatusSchema,
   RagAskSchema,
+  ReflectionIdSchema,
+  ReflectionListSchema,
+  ToolApprovalRespondSchema,
   VectorSearchSchema,
+  VisibilityCheckSchema,
 } from './schemas.ts';
 import {indexEntry} from '../services/indexingService.ts';
 import {embedText} from '../services/embedding.ts';
 import {searchSimilarChunks} from '../services/vectorStore.ts';
 import {askQuestion} from '../services/ragService.ts';
+import {runMinimalAgentTask} from '../services/agent/geoAgentRuntime.ts';
 import type {IpcChannels} from './channels.ts';
+import type {
+  AgentArtifact,
+  AgentTask,
+  Project,
+  PublishRecord,
+} from '@/types/domain';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -89,40 +120,82 @@ export function registerIpcHandlers() {
     return app.getPath(validated);
   });
 
-  function getOrCreateDefaultKb(projectId: number): number {
-    const existing = db
-      .prepare('SELECT id FROM knowledge_bases WHERE project_id = ? ORDER BY created_at LIMIT 1')
-      .get(projectId) as {id: number} | undefined;
-    if (existing) return existing.id;
-
+  // 项目
+  createHandler('project:create', (data) => {
+    const validated = ProjectCreateSchema.parse(data);
     const result = db
       .prepare(
-        "INSERT INTO knowledge_bases (project_id, name, description, created_at) VALUES (?, ?, ?, datetime('now'))",
+        "INSERT INTO projects (name, description, industry, region, status, created_at, updated_at) VALUES (?, ?, ?, ?, 'active', datetime('now'), datetime('now'))",
       )
-      .run(projectId, '默认知识库', null);
-    return Number(result.lastInsertRowid);
-  }
+      .run(
+        validated.name,
+        validated.description ?? null,
+        validated.industry ?? null,
+        validated.region ?? null,
+      );
+    return db
+      .prepare('SELECT * FROM projects WHERE id = ?')
+      .get(Number(result.lastInsertRowid)) as Project;
+  });
 
+  createHandler('project:list', () => {
+    return db
+      .prepare('SELECT * FROM projects ORDER BY updated_at DESC')
+      .all();
+  });
+
+  createHandler('project:get', (id) => {
+    const validated = ProjectIdSchema.parse(id);
+    return (
+      (db.prepare('SELECT * FROM projects WHERE id = ?').get(validated) as
+        | Project
+        | undefined) ?? null
+    );
+  });
+
+  createHandler('project:update', (id, data) => {
+    const validatedId = ProjectIdSchema.parse(id);
+    ProjectUpdateSchema.parse({id: validatedId, data});
+
+    const fields: string[] = [];
+    const params: unknown[] = [];
+    for (const [key, value] of Object.entries(data)) {
+      if (['name', 'description', 'industry', 'region', 'status'].includes(key)) {
+        fields.push(`${key} = ?`);
+        params.push(value);
+      }
+    }
+    if (fields.length === 0) return;
+    fields.push("updated_at = datetime('now')");
+    params.push(validatedId);
+
+    db.prepare(`UPDATE projects SET ${fields.join(', ')} WHERE id = ?`).run(...params);
+  });
+
+  createHandler('project:delete', (id) => {
+    const validated = ProjectIdSchema.parse(id);
+    db.prepare('DELETE FROM projects WHERE id = ?').run(validated);
+  });
+
+  // 知识库
   createHandler('kb:ingestText', async (params) => {
     const validated = KbIngestTextSchema.parse(params);
-    const kbId = getOrCreateDefaultKb(validated.projectId);
     const result = db
       .prepare(
-        "INSERT INTO knowledge_entries (kb_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+        "INSERT INTO knowledge_entries (project_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
       )
-      .run(kbId, validated.title, validated.content, 'text', null, 'pending');
+      .run(validated.projectId, validated.title, validated.content, 'text', null, 'pending');
     const entryId = Number(result.lastInsertRowid);
     return indexEntry(entryId);
   });
 
   createHandler('kb:ingestFile', async (params) => {
     const validated = KbIngestFileSchema.parse(params);
-    const kbId = getOrCreateDefaultKb(validated.projectId);
     const result = db
       .prepare(
-        "INSERT INTO knowledge_entries (kb_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+        "INSERT INTO knowledge_entries (project_id, title, content, source_type, source_file_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
       )
-      .run(kbId, validated.title, null, 'file', validated.filePath, 'pending');
+      .run(validated.projectId, validated.title, null, 'file', validated.filePath, 'pending');
     const entryId = Number(result.lastInsertRowid);
     return indexEntry(entryId);
   });
@@ -135,20 +208,26 @@ export function registerIpcHandlers() {
   createHandler('kb:search', async (params) => {
     const validated = KbSearchSchema.parse(params);
     const queryVector = await embedText(validated.query);
-    const results = searchSimilarChunks(queryVector, validated.limit ?? 5);
-    // Filter by project by joining knowledge_bases
-    return results.filter((r) => {
-      const kb = db
-        .prepare(
-          `SELECT kb.project_id
-           FROM knowledge_chunks c
-           JOIN knowledge_entries e ON c.entry_id = e.id
-           JOIN knowledge_bases kb ON e.kb_id = kb.id
-           WHERE c.id = ?`,
-        )
-        .get(r.chunkId) as {project_id: number} | undefined;
-      return kb?.project_id === validated.projectId;
-    });
+    return searchSimilarChunks(
+      validated.projectId,
+      queryVector,
+      validated.limit ?? 5,
+    );
+  });
+
+  createHandler('kb:facts', (projectId) => {
+    const validated = ProjectIdSchema.parse(projectId);
+    return db
+      .prepare('SELECT * FROM enterprise_facts WHERE project_id = ? ORDER BY created_at DESC')
+      .all(validated);
+  });
+
+  createHandler('kb:factsUpdate', (id, status) => {
+    const validated = KbFactsUpdateSchema.parse({id, status});
+    db.prepare('UPDATE enterprise_facts SET status = ? WHERE id = ?').run(
+      validated.status,
+      validated.id,
+    );
   });
 
   createHandler('rag:ask', async (params) => {
@@ -156,6 +235,312 @@ export function registerIpcHandlers() {
     return askQuestion(validated.projectId, validated.query, validated.limit ?? 5);
   });
 
+  // Assistant Runtime（骨架：只写入运行记录，不实现真实流式）
+  createHandler('assistant:streamStart', (params) => {
+    const validated = AssistantStreamStartSchema.parse(params);
+    const result = db
+      .prepare(
+        `INSERT INTO assistant_runs (
+           session_id, project_id, request_id, run_type, status,
+           started_at, updated_at
+         ) VALUES (?, ?, ?, ?, 'running', datetime('now'), datetime('now'))`,
+      )
+      .run(
+        validated.sessionId ?? null,
+        validated.projectId ?? null,
+        validated.requestId,
+        validated.runType ?? 'chat',
+      );
+    return {runId: Number(result.lastInsertRowid)};
+  });
+
+  createHandler('assistant:streamCancel', (requestId) => {
+    const validated = AssistantStreamCancelSchema.parse(requestId);
+    db.prepare("UPDATE assistant_runs SET status = 'cancelled', updated_at = datetime('now') WHERE request_id = ?").run(
+      validated,
+    );
+  });
+
+  createHandler('assistant:history', (sessionId, limit) => {
+    const validated = AssistantHistorySchema.parse({sessionId, limit});
+    return db
+      .prepare(
+        'SELECT * FROM chat_messages WHERE session_id = ? ORDER BY created_at DESC LIMIT ?',
+      )
+      .all(validated.sessionId, validated.limit ?? 50);
+  });
+
+  createHandler('assistant:queueList', (runId) => {
+    const validated = AssistantQueueListSchema.parse(runId);
+    return db
+      .prepare('SELECT * FROM assistant_queue_items WHERE run_id = ? ORDER BY order_index ASC')
+      .all(validated);
+  });
+
+  createHandler('assistant:queueUpdate', (itemId, status, metadata) => {
+    const validated = AssistantQueueUpdateSchema.parse({itemId, status, metadata});
+    db.prepare(
+      'UPDATE assistant_queue_items SET status = ?, metadata_json = ?, updated_at = datetime(\'now\') WHERE id = ?',
+    ).run(
+      validated.status,
+      metadata ? JSON.stringify(metadata) : null,
+      validated.itemId,
+    );
+  });
+
+  // 工具审批
+  createHandler('toolApproval:respond', (approvalId, approved, note) => {
+    const validated = ToolApprovalRespondSchema.parse({approvalId, approved, note});
+    db.prepare(
+      "UPDATE tool_approvals SET status = ?, reviewer_note = ?, reviewed_at = datetime('now') WHERE id = ?",
+    ).run(
+      validated.approved ? 'approved' : 'rejected',
+      validated.note ?? null,
+      validated.approvalId,
+    );
+  });
+
+  createHandler('toolApproval:listPending', () => {
+    return db
+      .prepare("SELECT * FROM tool_approvals WHERE status = 'requested' ORDER BY requested_at DESC")
+      .all();
+  });
+
+  // Agent Task Runtime（骨架）
+  createHandler('agentTask:create', (params) => {
+    const validated = AgentTaskCreateSchema.parse(params);
+    const result = db
+      .prepare(
+        `INSERT INTO agent_tasks (
+           session_id, project_id, title, user_goal, status,
+           risk_level, failure_count, loop_count, max_loop_count,
+           created_at, updated_at
+         ) VALUES (?, ?, ?, ?, 'created', 'low', 0, 0, 12, datetime('now'), datetime('now'))`,
+      )
+      .run(
+        validated.sessionId ?? null,
+        validated.projectId ?? null,
+        validated.title ?? null,
+        validated.userGoal,
+      );
+    return db.prepare('SELECT * FROM agent_tasks WHERE id = ?').get(Number(result.lastInsertRowid));
+  });
+
+  createHandler('agentTask:run', async (params) => {
+    const validated = AgentTaskRunSchema.parse(params);
+    return runMinimalAgentTask(validated.userGoal, {
+      sessionId: validated.sessionId,
+      projectId: validated.projectId,
+      title: validated.title,
+    });
+  });
+
+  createHandler('agentTask:get', (id) => {
+    const validated = AgentTaskIdSchema.parse(id);
+    return (
+      (db.prepare('SELECT * FROM agent_tasks WHERE id = ?').get(validated) as
+        | AgentTask
+        | undefined) ?? null
+    );
+  });
+
+  createHandler('agentTask:list', (filters) => {
+    const validated = AgentTaskListSchema.parse(filters ?? {});
+    let sql = 'SELECT * FROM agent_tasks WHERE 1=1';
+    const params: unknown[] = [];
+    if (validated.projectId !== undefined) {
+      sql += ' AND project_id = ?';
+      params.push(validated.projectId);
+    }
+    if (validated.status !== undefined) {
+      sql += ' AND status = ?';
+      params.push(validated.status);
+    }
+    sql += ' ORDER BY created_at DESC LIMIT ?';
+    params.push(validated.limit ?? 50);
+    return db.prepare(sql).all(...params);
+  });
+
+  createHandler('agentTask:resume', (id) => {
+    const validated = AgentTaskIdSchema.parse(id);
+    db.prepare("UPDATE agent_tasks SET status = 'running', updated_at = datetime('now') WHERE id = ?").run(validated);
+  });
+
+  createHandler('agentTask:pause', (id) => {
+    const validated = AgentTaskIdSchema.parse(id);
+    db.prepare("UPDATE agent_tasks SET status = 'paused', updated_at = datetime('now') WHERE id = ?").run(validated);
+  });
+
+  createHandler('agentTask:cancel', (id) => {
+    const validated = AgentTaskIdSchema.parse(id);
+    db.prepare("UPDATE agent_tasks SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?").run(validated);
+  });
+
+  createHandler('agentTask:retry', (id) => {
+    const validated = AgentTaskIdSchema.parse(id);
+    db.prepare(
+      "UPDATE agent_tasks SET status = 'retrying', failure_count = failure_count + 1, updated_at = datetime('now') WHERE id = ?",
+    ).run(validated);
+  });
+
+  createHandler('agentTask:timeline', (id) => {
+    const validated = AgentTaskIdSchema.parse(id);
+    return db
+      .prepare('SELECT * FROM agent_task_steps WHERE task_id = ? ORDER BY created_at ASC')
+      .all(validated);
+  });
+
+  createHandler('agentTask:artifacts', (id) => {
+    const validated = AgentTaskIdSchema.parse(id);
+    return db
+      .prepare('SELECT * FROM agent_artifacts WHERE task_id = ? ORDER BY created_at DESC')
+      .all(validated);
+  });
+
+  // 草稿 / 产物
+  createHandler('draft:list', (projectId) => {
+    const validated = DraftListSchema.parse(projectId);
+    return db
+      .prepare('SELECT * FROM agent_artifacts WHERE project_id = ? ORDER BY created_at DESC')
+      .all(validated);
+  });
+
+  createHandler('draft:get', (id) => {
+    const validated = DraftGetSchema.parse(id);
+    return (
+      (db.prepare('SELECT * FROM agent_artifacts WHERE id = ?').get(validated) as
+        | AgentArtifact
+        | undefined) ?? null
+    );
+  });
+
+  createHandler('draft:update', (id, content, status) => {
+    const validated = DraftUpdateSchema.parse({id, content, status});
+    db.prepare(
+      "UPDATE agent_artifacts SET content = ?, status = COALESCE(?, status), updated_at = datetime('now') WHERE id = ?",
+    ).run(validated.content, validated.status ?? null, validated.id);
+  });
+
+  createHandler('draft:review', (id, approved, note) => {
+    const validated = DraftReviewSchema.parse({id, approved, note});
+    const status = validated.approved ? 'approved' : 'rejected';
+    db.prepare(
+      "UPDATE agent_artifacts SET status = ?, metadata_json = json_patch(COALESCE(metadata_json, '{}'), json_object('reviewNote', ?)), updated_at = datetime('now') WHERE id = ?",
+    ).run(status, validated.note ?? null, validated.id);
+  });
+
+  // 发布
+  createHandler('publish:plan', (params) => {
+    const validated = PublishPlanSchema.parse(params);
+    const insert = db.prepare(
+      `INSERT INTO publish_records (
+         artifact_id, project_id, platform, channel_name, channel_type,
+         status, created_at
+       ) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+    );
+    const records: PublishRecord[] = [];
+    for (const channel of validated.channels) {
+      const result = insert.run(
+        validated.artifactId,
+        validated.projectId,
+        channel.platform,
+        channel.name,
+        channel.channelType ?? null,
+      );
+      records.push(
+        db
+          .prepare('SELECT * FROM publish_records WHERE id = ?')
+          .get(Number(result.lastInsertRowid)) as PublishRecord,
+      );
+    }
+    return records;
+  });
+
+  createHandler('publish:approve', (params) => {
+    const validated = PublishApproveSchema.parse(params);
+    const update = db.prepare('UPDATE publish_records SET status = ? WHERE id = ?');
+    const status = validated.approved ? 'pending' : 'rejected';
+    for (const id of validated.publishRecordIds) {
+      update.run(status, id);
+    }
+  });
+
+  createHandler('publish:status', (publishRecordId) => {
+    const validated = PublishStatusSchema.parse(publishRecordId);
+    return (
+      (db.prepare('SELECT * FROM publish_records WHERE id = ?').get(validated) as
+        | PublishRecord
+        | undefined) ?? null
+    );
+  });
+
+  // 可见性
+  createHandler('visibility:check', (params) => {
+    const validated = VisibilityCheckSchema.parse(params);
+    const publishRecord = db
+      .prepare('SELECT * FROM publish_records WHERE id = ?')
+      .get(validated.publishRecordId) as
+      | {project_id: number; published_url: string | null; channel_name: string}
+      | undefined;
+    const projectId = publishRecord?.project_id ?? 0;
+    const query = validated.query ?? publishRecord?.channel_name ?? '';
+    const result = db
+      .prepare(
+        `INSERT INTO visibility_checks (
+           publish_record_id, project_id, query, published_url,
+           checked_at
+         ) VALUES (?, ?, ?, ?, datetime('now'))`,
+      )
+      .run(
+        validated.publishRecordId,
+        projectId,
+        query,
+        publishRecord?.published_url ?? null,
+      );
+    return db
+      .prepare('SELECT * FROM visibility_checks WHERE id = ?')
+      .get(Number(result.lastInsertRowid));
+  });
+
+  // 反思假设
+  createHandler('reflection:list', (filters) => {
+    const validated = ReflectionListSchema.parse(filters ?? {});
+    let sql = 'SELECT * FROM reflection_hypotheses WHERE 1=1';
+    const params: unknown[] = [];
+    if (validated.status !== undefined) {
+      sql += ' AND status = ?';
+      params.push(validated.status);
+    }
+    if (validated.scope !== undefined) {
+      sql += ' AND scope = ?';
+      params.push(validated.scope);
+    }
+    sql += ' ORDER BY created_at DESC';
+    return db.prepare(sql).all(...params);
+  });
+
+  createHandler('reflection:approve', (id) => {
+    const validated = ReflectionIdSchema.parse(id);
+    db.prepare(
+      "UPDATE reflection_hypotheses SET status = 'active', updated_at = datetime('now') WHERE id = ?",
+    ).run(validated);
+  });
+
+  createHandler('reflection:reject', (id) => {
+    const validated = ReflectionIdSchema.parse(id);
+    db.prepare(
+      "UPDATE reflection_hypotheses SET status = 'rejected', updated_at = datetime('now') WHERE id = ?",
+    ).run(validated);
+  });
+
+  createHandler('reflection:archive', (id) => {
+    const validated = ReflectionIdSchema.parse(id);
+    db.prepare(
+      "UPDATE reflection_hypotheses SET status = 'archived', updated_at = datetime('now') WHERE id = ?",
+    ).run(validated);
+  });
+
+  // 窗口
   createHandler('window:minimize', () => {
     mainWindow?.minimize();
   });

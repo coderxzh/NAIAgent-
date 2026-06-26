@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {app, BrowserWindow, Menu} from 'electron';
 import {join} from 'node:path';
 import {setApp} from './utils/paths.ts';

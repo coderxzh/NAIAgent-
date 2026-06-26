@@ -148,6 +148,123 @@ export interface ChatMessage {
   created_at: string;
 }
 
+// 会话摘要（长期记忆）
+export interface ConversationSummary {
+  id: number;
+  session_id: number;
+  project_id: number | null;
+  summary_type: string;
+  message_start_id: number | null;
+  message_end_id: number | null;
+  summary_json: string;
+  token_estimate: number;
+  model_provider: string | null;
+  model_name: string | null;
+  prompt_version: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// 记忆事件审计日志
+export interface MemoryEvent {
+  id: number;
+  memory_type: string;
+  memory_table: string;
+  memory_id: number;
+  event_type: string;
+  old_value_json: string | null;
+  new_value_json: string | null;
+  reason: string | null;
+  actor: string;
+  task_id: number | null;
+  project_id: number | null;
+  created_at: string;
+}
+
+// 文章产物元数据
+export interface ArticleArtifactMeta {
+  id: number;
+  artifact_id: number;
+  project_id: number;
+  article_strategy_type: string;
+  content_format: string | null;
+  support_article_type: string | null;
+  ranking_type: string | null;
+  ranking_theme: string | null;
+  target_question: string | null;
+  title: string | null;
+  title_score_json: string | null;
+  applied_hypotheses_json: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 文章 Claim
+export interface ArticleClaim {
+  id: number;
+  artifact_id: number;
+  project_id: number;
+  claim_text: string;
+  claim_type: string;
+  risk_level: string;
+  review_status: string;
+  created_at: string;
+}
+
+// Claim 来源
+export interface ArticleClaimSource {
+  id: number;
+  claim_id: number;
+  source_type: string;
+  source_id: string;
+  source_quote: string | null;
+  confidence: number | null;
+  created_at: string;
+}
+
+// 文章审核记录
+export interface ArticleReview {
+  id: number;
+  artifact_id: number;
+  project_id: number;
+  review_type: string;
+  reviewer: string;
+  passed: number;
+  score: number | null;
+  review_json: string | null;
+  risk_warnings_json: string | null;
+  created_at: string;
+}
+
+// 排行榜上榜企业
+export interface RankingArticleItem {
+  id: number;
+  artifact_id: number;
+  project_id: number;
+  rank: number;
+  company_name: string;
+  is_target_company: number;
+  recommendation_reason: string;
+  suitable_for_json: string | null;
+  core_strengths_json: string | null;
+  evidence_refs_json: string | null;
+  risk_notes_json: string | null;
+  created_at: string;
+}
+
+// 排行榜评选维度
+export interface RankingCriterion {
+  id: number;
+  artifact_id: number;
+  project_id: number;
+  criterion_name: string;
+  criterion_description: string | null;
+  weight: number | null;
+  required_evidence_json: string | null;
+  created_at: string;
+}
+
 // 生成产物（稿件/报告/计划等）
 export interface AgentArtifact {
   id: number;
@@ -518,23 +635,59 @@ export type MessagePart =
   | { type: 'queue'; queueItemIds: number[] }
   | { type: 'error'; errorId: number };
 
-// 反思假设系统
+// 反思假设系统（对应 reflection_hypotheses 表，含 013 迁移补充字段）
 export interface ReflectionHypothesis {
   id: number;
+  project_id: number | null;
   scope: string;
   industry: string | null;
+  region: string | null;
+  content_format: string | null;
+  article_strategy_type: string | null;
+  ranking_type: string | null;
+  ranking_theme: string | null;
+
+  // 旧字段保留兼容
   channel_name: string | null;
   target_stage: string;
   hypothesis_type: string;
   content: string;
   positive_examples: number;
   negative_examples: number;
+
+  // 新字段（与开发文档 23.7 对齐）
+  hypothesis_text: string | null;
+  target_skill: string | null;
+  target_engine: string | null;
+  target_channel: string | null;
+  applicable_conditions_json: string | null;
+  excluded_conditions_json: string | null;
+  recommended_action_json: string | null;
+  positive_examples_json: string | null;
+  negative_examples_json: string | null;
+  inconclusive_examples_json: string | null;
+  positive_count: number;
+  negative_count: number;
+  inconclusive_count: number;
   sample_size: number;
+  evidence_project_count: number;
+  evidence_industry_count: number;
+
   effect_score: number;
   confidence: number;
+  validation_result_json: string | null;
+  generated_by_model: string | null;
+  validated_by_model: string | null;
+  human_review_status: string;
+  human_review_note: string | null;
+
   status: ReflectionHypothesisStatus;
   last_validated_at: string | null;
   decay_at: string | null;
+  activated_at: string | null;
+  degraded_at: string | null;
+  archived_at: string | null;
+  rejected_at: string | null;
   created_at: string;
   updated_at: string;
 }

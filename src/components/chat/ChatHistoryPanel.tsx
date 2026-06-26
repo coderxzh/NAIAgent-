@@ -218,32 +218,14 @@ export default function ChatHistoryPanel({
                             <p className="text-sm font-medium truncate flex-1 min-w-0">
                               {session.title || t.chatNewSession}
                             </p>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span
-                                className={cn(
-                                  'text-xs',
-                                  cls('text-gray-500', 'text-zinc-400')
-                                )}
-                              >
-                                {formatSessionDate(session.created_at, lang)}
-                              </span>
-                              {onDelete && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete(session.id);
-                                  }}
-                                  className={cn(
-                                    'h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity',
-                                    'text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20'
-                                  )}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                            <span
+                              className={cn(
+                                'text-xs shrink-0',
+                                cls('text-gray-500', 'text-zinc-400')
                               )}
-                            </div>
+                            >
+                              {formatSessionDate(session.created_at, lang)}
+                            </span>
                           </div>
                           <p
                             className={cn(
@@ -253,12 +235,30 @@ export default function ChatHistoryPanel({
                           >
                             {previewMap[session.id] || t.chatHistoryNoMessages}
                           </p>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <MessageSquare className="w-3 h-3" />
-                            <span>
-                              {countMap[session.id] ?? 0}
-                              {t.chatMessagesSuffix}
-                            </span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MessageSquare className="w-3 h-3" />
+                              <span>
+                                {countMap[session.id] ?? 0}
+                                {t.chatMessagesSuffix}
+                              </span>
+                            </div>
+                            {onDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDelete(session.id);
+                                }}
+                                className={cn(
+                                  'h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity',
+                                  'text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20'
+                                )}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );

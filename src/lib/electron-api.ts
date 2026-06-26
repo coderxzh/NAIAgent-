@@ -44,6 +44,24 @@ export const kbApi = {
     api.invoke('kb:factsUpdate', id, status),
 };
 
+export const factApi = {
+  extract: (params: Parameters<IpcChannels['fact:extract']>[0]) =>
+    api.invoke('fact:extract', params),
+  list: (params: Parameters<IpcChannels['fact:list']>[0]) =>
+    api.invoke('fact:list', params),
+  listPending: (params: Parameters<IpcChannels['fact:listPending']>[0]) =>
+    api.invoke('fact:listPending', params),
+  confirm: (params: Parameters<IpcChannels['fact:confirm']>[0]) =>
+    api.invoke('fact:confirm', params),
+  reject: (params: Parameters<IpcChannels['fact:reject']>[0]) =>
+    api.invoke('fact:reject', params),
+  modifyAndConfirm: (params: Parameters<IpcChannels['fact:modifyAndConfirm']>[0]) =>
+    api.invoke('fact:modifyAndConfirm', params),
+  missingFields: (projectId: number) => api.invoke('fact:missingFields', projectId),
+  parseReviewIntent: (params: Parameters<IpcChannels['fact:parseReviewIntent']>[0]) =>
+    api.invoke('fact:parseReviewIntent', params),
+};
+
 export const ragApi = {
   ask: (projectId: number, query: string, limit?: number) =>
     api.invoke('rag:ask', {projectId, query, limit}),

@@ -1,5 +1,5 @@
 import { executeText } from './models/modelRouter.ts';
-import type { UnifiedChatMessage } from './models/types.ts';
+import type { UnifiedChatMessage, ModelResponseFormat } from './models/types.ts';
 
 export type LlmMessage = UnifiedChatMessage;
 
@@ -13,10 +13,14 @@ export interface LlmResponse {
 }
 
 export async function chat(
-  role: 'chat' | 'source_discovery' | 'article_generation',
+  role: 'chat' | 'source_discovery' | 'article_generation' | 'fact_extraction',
   messages: LlmMessage[],
+  options?: { responseFormat?: ModelResponseFormat },
 ): Promise<LlmResponse> {
-  const result = await executeText(role, { messages });
+  const result = await executeText(role, {
+    messages,
+    responseFormat: options?.responseFormat,
+  });
 
   return {
     content: result.content,

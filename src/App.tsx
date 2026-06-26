@@ -10,6 +10,7 @@ import AiWebBuilderView from './components/ai-web-builder/AiWebBuilderView';
 import ErrorBoundary from './components/ErrorBoundary';
 import KbIngestPanel from './components/knowledge-base/KbIngestPanel';
 import KbCreateView from './components/knowledge-base/KbCreateView';
+import FactReviewView from './components/facts/FactReviewView';
 import type { View } from './types/domain';
 
 function KbIngestWrapper() {
@@ -27,6 +28,7 @@ const viewComponents: Record<View, React.ComponentType> = {
   aiWebBuilder: AiWebBuilderView,
   kbIngest: KbIngestWrapper,
   kbCreate: KbCreateView,
+  factReview: FactReviewView,
 };
 
 export default function App() {

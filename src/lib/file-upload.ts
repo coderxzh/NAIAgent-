@@ -19,6 +19,16 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  type?: 'fact_review' | 'text';
+  facts?: Array<{
+    id: number;
+    fact_type: string;
+    fact_key: string;
+    fact_value: string | null;
+    confidence: number;
+    source_quote: string | null;
+    status: string;
+  }>;
   sources?: Array<{
     chunkId: number;
     entryId: number;

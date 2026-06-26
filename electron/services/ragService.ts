@@ -2,6 +2,7 @@ import {embedText} from './embedding.ts';
 import {searchSimilarChunks} from './vectorStore.ts';
 import {chat} from './llmService.ts';
 import {getDb} from '../db/connection.ts';
+import {getMissingFieldsAndWarnings} from './facts/pendingFactReviewService.ts';
 
 export interface RagSource {
   chunkId: number;
@@ -34,6 +35,8 @@ export interface EvidencePack {
   query: string;
   facts: EvidenceFact[];
   chunks: EvidenceChunk[];
+  missingFields: string[];
+  riskWarnings: string[];
 }
 
 export interface RagAnswer {
@@ -80,12 +83,12 @@ async function buildEvidencePack(
   const db = getDb();
   const tokens = tokenize(query);
 
-  // 1. 企业事实
+  // 1. 企业事实（仅已确认）
   const factRows = db
     .prepare(
       `SELECT id, fact_type, fact_key, fact_value, confidence
        FROM enterprise_facts
-       WHERE project_id = ?`,
+       WHERE project_id = ? AND status = 'confirmed'`,
     )
     .all(projectId) as Array<{
     id: number;
@@ -112,6 +115,8 @@ async function buildEvidencePack(
     .sort((a, b) => b._score - a._score)
     .slice(0, Math.max(3, Math.floor(topK / 2)))
     .map(({_score, ...rest}) => rest);
+
+  const {missing, riskWarnings} = getMissingFieldsAndWarnings(projectId);
 
   // 2. FTS5 关键词召回
   const candidateLimit = Math.max(topK * 4, 20);
@@ -224,6 +229,8 @@ async function buildEvidencePack(
     query,
     facts,
     chunks,
+    missingFields: missing,
+    riskWarnings: riskWarnings,
   };
 }
 

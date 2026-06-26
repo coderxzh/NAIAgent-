@@ -6,7 +6,8 @@ export type View =
   | 'autoLearning'
   | 'aiWebBuilder'
   | 'kbIngest'
-  | 'kbCreate';
+  | 'kbCreate'
+  | 'factReview';
 
 // 通用状态枚举
 export type TaskStatus =
@@ -121,7 +122,36 @@ export interface EnterpriseFact {
   extraction_model: string | null;
   extraction_prompt_version: string | null;
   status: FactStatus;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  review_metadata_json: string | null;
+  replaces_fact_id: number | null;
+  extracted_json: string | null;
   created_at: string;
+}
+
+// 事实抽取输出（DeepSeek JSON Output）
+export interface ExtractedFactCandidate {
+  fact_type: string;
+  fact_value: string;
+  normalized_value?: string;
+  source_chunk_id: number;
+  source_quote: string;
+  confidence: number;
+  reasoning_note?: string;
+}
+
+// 事实审核意图
+export type FactReviewAction =
+  | {action: 'confirm'; factIds: number[]}
+  | {action: 'reject'; factIds: number[]; reason?: string}
+  | {action: 'modify_and_confirm'; factId: number; newFactValue: string; newFactType?: string}
+  | {action: 'add_candidate'; factType?: string; factValue: string}
+  | {action: 'noop'};
+
+export interface FactReviewIntent {
+  type: 'confirm_all' | 'reject_all' | 'confirm_some' | 'modify_some' | 'mixed' | 'noop';
+  actions: FactReviewAction[];
 }
 
 // 聊天会话（公共会话，不绑定 project）

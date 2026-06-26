@@ -1,24 +1,23 @@
-import { dbApi } from '../lib/electron-api';
-import type { EnterpriseFact } from '../types/domain';
+import {factApi, dbApi} from '../lib/electron-api';
+import type {EnterpriseFact} from '../types/domain';
+
+const FACT_COLUMNS = `
+  id, project_id, fact_type, fact_key, fact_value, confidence,
+  source_entry_id, source_chunk_id, source_quote,
+  extraction_model, extraction_prompt_version, status,
+  reviewed_at, reviewed_by, review_metadata_json, replaces_fact_id, extracted_json,
+  created_at
+`;
 
 export const factService = {
   async getByProject(projectId: number): Promise<EnterpriseFact[]> {
-    return dbApi.query(
-      `SELECT id, project_id, fact_type, fact_key, fact_value, confidence,
-              source_entry_id, source_chunk_id, source_quote,
-              extraction_model, extraction_prompt_version, status, created_at
-       FROM enterprise_facts
-       WHERE project_id = ?
-       ORDER BY created_at DESC`,
-      [projectId],
-    ) as Promise<EnterpriseFact[]>;
+    const result = await factApi.list({projectId, limit: 500});
+    return result.facts;
   },
 
   async getById(id: number): Promise<EnterpriseFact | undefined> {
     const rows = (await dbApi.query(
-      `SELECT id, project_id, fact_type, fact_key, fact_value, confidence,
-              source_entry_id, source_chunk_id, source_quote,
-              extraction_model, extraction_prompt_version, status, created_at
+      `SELECT ${FACT_COLUMNS}
        FROM enterprise_facts
        WHERE id = ?`,
       [id],
@@ -33,8 +32,9 @@ export const factService = {
       `INSERT INTO enterprise_facts (
          project_id, fact_type, fact_key, fact_value, confidence,
          source_entry_id, source_chunk_id, source_quote,
-         extraction_model, extraction_prompt_version, status, created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+         extraction_model, extraction_prompt_version, status,
+         reviewed_at, reviewed_by, review_metadata_json, replaces_fact_id, extracted_json, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
       [
         data.project_id,
         data.fact_type,
@@ -47,6 +47,11 @@ export const factService = {
         data.extraction_model ?? null,
         data.extraction_prompt_version ?? null,
         data.status ?? 'candidate',
+        data.reviewed_at ?? null,
+        data.reviewed_by ?? null,
+        data.review_metadata_json ?? null,
+        data.replaces_fact_id ?? null,
+        data.extracted_json ?? null,
       ],
     );
     return Number(result.lastInsertRowid);

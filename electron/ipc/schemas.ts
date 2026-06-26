@@ -81,6 +81,56 @@ export const KbFactsUpdateSchema = z.object({
   status: z.enum(['candidate', 'confirmed', 'rejected', 'deprecated']),
 });
 
+export const FactExtractSchema = z.object({
+  projectId: z.number().int().positive(),
+  entryId: z.number().int().positive().optional(),
+  chunkIds: z.array(z.number().int().positive()).optional(),
+});
+
+export const FactListSchema = z.object({
+  projectId: z.number().int().positive(),
+  status: z.enum(['candidate', 'confirmed', 'rejected', 'deprecated']).optional(),
+  factType: z.string().optional(),
+  limit: z.number().int().min(1).max(200).optional(),
+  offset: z.number().int().min(0).optional(),
+});
+
+export const FactListPendingSchema = z.object({
+  projectId: z.number().int().positive(),
+  sessionId: z.number().int().positive().optional(),
+});
+
+export const FactConfirmSchema = z.object({
+  factIds: z.array(z.number().int().positive()).min(1),
+  reviewerNote: z.string().optional(),
+});
+
+export const FactRejectSchema = z.object({
+  factIds: z.array(z.number().int().positive()).min(1),
+  reviewerNote: z.string().optional(),
+});
+
+export const FactModifyAndConfirmSchema = z.object({
+  factId: z.number().int().positive(),
+  newFactValue: z.string().min(1),
+  newFactType: z.string().optional(),
+  reviewMessageId: z.number().int().positive().optional(),
+});
+
+export const FactMissingFieldsSchema = z.number().int().positive();
+
+export const FactParseReviewIntentSchema = z.object({
+  text: z.string().min(1),
+  facts: z.array(
+    z.object({
+      factId: z.number().int().positive(),
+      displayIndex: z.number().int().positive(),
+      factType: z.string(),
+      factValue: z.string(),
+    }),
+  ).min(1),
+});
+
 // Assistant
 export const AssistantStreamStartSchema = z.object({
   sessionId: z.number().int().positive().optional(),

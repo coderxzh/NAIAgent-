@@ -4,6 +4,8 @@ import type {
   AgentTaskStep,
   ChatMessage,
   EnterpriseFact,
+  FactReviewIntent,
+  FactStatus,
   Project,
   PublishRecord,
   ReflectionHypothesis,
@@ -28,6 +30,8 @@ interface KnowledgeSearchResult {
   sourceType: string | null;
   sourceFilePath: string | null;
 }
+
+import type {FactExtractionResult} from '../services/facts/factTypes.ts';
 
 interface RagAnswer {
   answer: string;
@@ -102,6 +106,34 @@ export interface IpcChannels {
   }) => KnowledgeSearchResult[];
   'kb:facts': (projectId: number) => EnterpriseFact[];
   'kb:factsUpdate': (id: number, status: EnterpriseFact['status']) => void;
+
+  // 事实抽取与审核
+  'fact:extract': (params: {
+    projectId: number;
+    entryId?: number;
+    chunkIds?: number[];
+  }) => FactExtractionResult;
+  'fact:list': (params: {
+    projectId: number;
+    status?: FactStatus;
+    factType?: string;
+    limit?: number;
+    offset?: number;
+  }) => {facts: EnterpriseFact[]; total: number};
+  'fact:listPending': (params: {projectId: number; sessionId?: number}) => EnterpriseFact[];
+  'fact:confirm': (params: {factIds: number[]; reviewerNote?: string}) => {confirmed: number[]};
+  'fact:reject': (params: {factIds: number[]; reviewerNote?: string}) => {rejected: number[]};
+  'fact:modifyAndConfirm': (params: {
+    factId: number;
+    newFactValue: string;
+    newFactType?: string;
+    reviewMessageId?: number;
+  }) => EnterpriseFact;
+  'fact:missingFields': (projectId: number) => {missing: string[]; riskWarnings: string[]};
+  'fact:parseReviewIntent': (params: {
+    text: string;
+    facts: {factId: number; displayIndex: number; factType: string; factValue: string}[];
+  }) => FactReviewIntent;
 
   'rag:ask': (params: {
     projectId: number;

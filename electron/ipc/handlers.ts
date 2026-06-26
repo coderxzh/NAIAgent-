@@ -18,6 +18,14 @@ import {
   DraftListSchema,
   DraftReviewSchema,
   DraftUpdateSchema,
+  FactConfirmSchema,
+  FactExtractSchema,
+  FactListPendingSchema,
+  FactListSchema,
+  FactMissingFieldsSchema,
+  FactModifyAndConfirmSchema,
+  FactParseReviewIntentSchema,
+  FactRejectSchema,
   KbFactsUpdateSchema,
   KbIndexEntrySchema,
   KbIngestFileSchema,
@@ -42,6 +50,14 @@ import {embedText} from '../services/embedding.ts';
 import {searchSimilarChunks} from '../services/vectorStore.ts';
 import {askQuestion} from '../services/ragService.ts';
 import {runMinimalAgentTask} from '../services/agent/geoAgentRuntime.ts';
+import {extractFacts} from '../services/facts/factExtractionService.ts';
+import {confirmFacts, rejectFacts, modifyAndConfirm} from '../services/facts/factReviewService.ts';
+import {parseReviewIntent} from '../services/facts/factReviewIntentParser.ts';
+import {
+  getMissingFieldsAndWarnings,
+  getPendingReviewSession,
+} from '../services/facts/pendingFactReviewService.ts';
+import {listFacts} from '../services/facts/factRepository.ts';
 import type {IpcChannels} from './channels.ts';
 import type {
   AgentArtifact,
@@ -228,6 +244,68 @@ export function registerIpcHandlers() {
       validated.status,
       validated.id,
     );
+  });
+
+  // 事实抽取与审核
+  createHandler('fact:extract', async (params) => {
+    const validated = FactExtractSchema.parse(params);
+    return extractFacts({
+      projectId: validated.projectId,
+      entryId: validated.entryId,
+      chunkIds: validated.chunkIds,
+    });
+  });
+
+  createHandler('fact:list', (params) => {
+    const validated = FactListSchema.parse(params);
+    return listFacts({
+      projectId: validated.projectId,
+      status: validated.status,
+      factType: validated.factType,
+      limit: validated.limit,
+      offset: validated.offset,
+    });
+  });
+
+  createHandler('fact:listPending', (params) => {
+    const validated = FactListPendingSchema.parse(params);
+    return getPendingReviewSession(validated.projectId).facts;
+  });
+
+  createHandler('fact:confirm', (params) => {
+    const validated = FactConfirmSchema.parse(params);
+    return confirmFacts(validated.factIds, {reviewerNote: validated.reviewerNote});
+  });
+
+  createHandler('fact:reject', (params) => {
+    const validated = FactRejectSchema.parse(params);
+    return rejectFacts(validated.factIds, {reviewerNote: validated.reviewerNote});
+  });
+
+  createHandler('fact:modifyAndConfirm', (params) => {
+    const validated = FactModifyAndConfirmSchema.parse(params);
+    return modifyAndConfirm(validated.factId, validated.newFactValue, {
+      newFactType: validated.newFactType,
+      reviewMessageId: validated.reviewMessageId,
+    }).fact;
+  });
+
+  createHandler('fact:missingFields', (projectId) => {
+    const validated = FactMissingFieldsSchema.parse(projectId);
+    return getMissingFieldsAndWarnings(validated);
+  });
+
+  createHandler('fact:parseReviewIntent', (params) => {
+    const validated = FactParseReviewIntentSchema.parse(params);
+    return parseReviewIntent({
+      text: validated.text,
+      facts: validated.facts as Array<{
+        factId: number;
+        displayIndex: number;
+        factType: string;
+        factValue: string;
+      }>,
+    });
   });
 
   createHandler('rag:ask', async (params) => {

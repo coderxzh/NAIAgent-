@@ -5,6 +5,7 @@ import { MessageResponse } from '@/components/ai-elements/message';
 import { useTheme } from '@/hooks/use-theme';
 import type { ChatMessage } from '@/lib/file-upload';
 import { FileText } from 'lucide-react';
+import PendingFactChatCard from '../facts/PendingFactChatCard';
 
 interface ChatMessageItemProps {
   message: ChatMessage;
@@ -32,6 +33,8 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
           >
             {message.content}
           </div>
+        ) : message.type === 'fact_review' && message.facts ? (
+          <PendingFactChatCard content={message.content} facts={message.facts} />
         ) : (
           <div
             className={`
@@ -47,7 +50,7 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
           </div>
         )}
 
-        {!isUser && message.sources && message.sources.length > 0 && (
+        {!isUser && message.sources && message.sources.length > 0 && message.type !== 'fact_review' && (
           <div className="mt-2 space-y-1">
             <p className={cls('text-xs text-gray-500', 'text-zinc-500')}>参考来源：</p>
             {message.sources.map((source, idx) => (

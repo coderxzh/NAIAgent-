@@ -10,6 +10,7 @@ import { useAppState } from '@/context/AppStateContext';
 import { chatService } from '@/services/chatService';
 import { projectService } from '@/services/projectService';
 import { agentTaskApi } from '@/lib/electron-api';
+import { handleIngestIntent } from '@/services/agentKnowledgeIngestService';
 import type { UploadedFile, ChatMessage as UiChatMessage } from '@/lib/file-upload';
 import type { ChatSession } from '@/types/domain';
 import WelcomeScreen from './WelcomeScreen';
@@ -110,12 +111,24 @@ export default function ChatInterface({
     try {
       const data = await chatService.getMessages(sessionId);
       setMessages(
-        data.map((m) => ({
-          id: `msg_${m.id}`,
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-          sources: undefined,
-        })),
+        data.map((m) => {
+          let render: {type?: string; facts?: unknown} | undefined;
+          if (m.render_json) {
+            try {
+              render = JSON.parse(m.render_json) as {type?: string; facts?: unknown};
+            } catch {
+              render = undefined;
+            }
+          }
+          return {
+            id: `msg_${m.id}`,
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+            type: render?.type === 'fact_review' ? 'fact_review' : undefined,
+            facts: render?.type === 'fact_review' ? (render.facts as UiChatMessage['facts']) : undefined,
+            sources: undefined,
+          };
+        }),
       );
     } catch {
       setMessages([]);
@@ -164,13 +177,20 @@ export default function ChatInterface({
   );
 
   const saveMessage = useCallback(
-    async (sessionId: number, role: 'user' | 'assistant', content: string, model?: string) => {
+    async (
+      sessionId: number,
+      role: 'user' | 'assistant',
+      content: string,
+      model?: string,
+      renderJson?: object,
+    ) => {
       await chatService.addMessage({
         session_id: sessionId,
         project_id: currentProject?.id ?? null,
         role,
         content,
         model: model ?? null,
+        render_json: renderJson ? JSON.stringify(renderJson) : null,
       });
     },
     [currentProject],
@@ -237,9 +257,29 @@ export default function ChatInterface({
       await saveMessage(session.id, 'user', text);
       skipLoadRef.current = false;
 
+      // 优先识别“录入资料”意图
+      if (currentProject) {
+        const ingestResult = await handleIngestIntent(text, currentProject.id);
+        if (ingestResult?.handled) {
+          const reply: UiChatMessage = {
+            id: `assistant_${Date.now()}`,
+            role: 'assistant',
+            content: ingestResult.content,
+            type: ingestResult.type,
+            facts: ingestResult.facts,
+          };
+          await saveMessage(session.id, 'assistant', reply.content, undefined, {
+            type: reply.type,
+            facts: reply.facts,
+          });
+          setMessages((prev) => [...prev, reply]);
+          return;
+        }
+      }
+
       await generateResponse(session.id, text);
     },
-    [uploadedFiles.length, ensureSession, generateResponse, onFileUpload, saveMessage],
+    [uploadedFiles.length, ensureSession, generateResponse, onFileUpload, saveMessage, currentProject],
   );
 
   const handleFileUpload = useCallback(

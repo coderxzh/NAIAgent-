@@ -296,6 +296,7 @@ export default function ChatInterface({
     setCurrentChatSession(null);
     setMessages([]);
     setInputText('');
+    setHistoryOpen(false);
   }, [setCurrentChatSession]);
 
   const handleSelectSession = useCallback(

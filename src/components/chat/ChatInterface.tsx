@@ -94,6 +94,7 @@ export default function ChatInterface({
   const getProjectColor = effectiveGetProjectColor;
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
+  const skipLoadRef = useRef(false);
 
   const loadSessions = useCallback(async () => {
     try {
@@ -105,6 +106,7 @@ export default function ChatInterface({
   }, []);
 
   const loadMessages = useCallback(async (sessionId: number) => {
+    if (skipLoadRef.current) return;
     try {
       const data = await chatService.getMessages(sessionId);
       setMessages(
@@ -216,8 +218,6 @@ export default function ChatInterface({
       const text = message.text.trim();
       if (!text && uploadedFiles.length === 0) return;
 
-      const session = await ensureSession(text);
-
       const userMsg: UiChatMessage = {
         id: `user_${Date.now()}`,
         role: 'user',
@@ -226,13 +226,16 @@ export default function ChatInterface({
       setMessages((prev) => [...prev, userMsg]);
       setInputText('');
 
-      await saveMessage(session.id, 'user', text);
-
       if (onFileUpload) {
         onFileUpload([]);
       } else {
         setInternalFiles([]);
       }
+
+      skipLoadRef.current = true;
+      const session = await ensureSession(text);
+      await saveMessage(session.id, 'user', text);
+      skipLoadRef.current = false;
 
       await generateResponse(session.id, text);
     },

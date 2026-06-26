@@ -39,6 +39,12 @@ Skill Package
 ↓
 检索 / Evidence Pack
 ↓
+目标问题生成 / 问题池
+↓
+信源发现
+↓
+标题生成
+↓
 支持类文章 / 排行榜文章
 ↓
 审核
@@ -111,7 +117,7 @@ M0：桌面基础完成
 M1：GEO UI 与基础状态完成
 M2：知识库 + 检索闭环完成
 M3：企业事实确认闭环完成
-M4：文章生成 MVP 完成
+M4：问题池、信源发现与文章生成 MVP 完成
 M5：Assistant Runtime 与基础 Agent 完成
 M6：发布与可见性检测完成
 M7：反思学习闭环完成
@@ -129,6 +135,14 @@ M8：稳定性、测试、打包完成
 ↓
 用户确认事实
 ↓
+生成目标问题池
+↓
+选择目标问题
+↓
+完成信源发现
+↓
+生成标题候选
+↓
 生成支持类文章或综合排行榜文章
 ↓
 完成 Claim-source 校验
@@ -142,21 +156,21 @@ M8：稳定性、测试、打包完成
 
 ## 5. Phase 总览
 
-| Phase    | 名称                                            |     时间 | 目标                                                         |
-| -------- | ----------------------------------------------- | -------: | ------------------------------------------------------------ |
-| Phase 0  | Electron + SQLite 骨架                          |   已完成 | 桌面基础                                                     |
-| Phase 1  | 仪表盘 UI 与设计系统                            | 1.5–2 周 | GEO UI 先行                                                  |
-| Phase 2  | 架构、模型路由、IPC 与数据库 Schema             | 2–2.5 周 | 最终表结构、Model Router、Service 骨架                       |
-| Phase 3  | 公司管理、公共对话历史与基础记忆                |     2 周 | project CRUD、chat history、conversation memory              |
-| Phase 4  | 文件清洗、语义切片与 Embedding 索引             | 2–2.5 周 | cleaner、chunker、embedding、vec、FTS5                       |
-| Phase 5  | Hybrid Retrieval 与 Evidence Pack               | 1.5–2 周 | Fact + FTS + Vector + Evidence Pack                          |
-| Phase 6  | 企业事实抽取与人工确认                          | 1.5–2 周 | DeepSeek JSON 事实抽取、confirmed facts                      |
-| Phase 7  | 文章生成 MVP：支持类文章与综合排行榜            |   3–4 周 | title、support、ranking、claim map、draft review             |
-| Phase 8  | Assistant Runtime、流式事件、工具审批与草稿体验 | 2.5–3 周 | assistant stream、tool approval、draft UI、execution ledger  |
-| Phase 9  | Agent-first Task Runtime + Skill 编排           |   3–4 周 | DeepAgents.js、AllowedActionPolicy、ToolGuard、MemoryContextBuilder |
-| Phase 10 | 发布计划、发布记录与豆包助手可见性检测          |     2 周 | publish_records、visibility_checks、doubao_app               |
-| Phase 11 | 反思学习系统                                    |   3–4 周 | Reflection Case Corpus、positive/negative samples、hypotheses |
-| Phase 12 | 稳定性、测试、恢复、预算与打包                  |   2–3 周 | Recovery、LoopGuard、预算、端到端测试、打包                  |
+| Phase    | 名称                                              |       时间 | 目标                                                                          |
+| -------- | ----------------------------------------------- | -------: | --------------------------------------------------------------------------- |
+| Phase 0  | Electron + SQLite 骨架                            |      已完成 | 桌面基础                                                                        |
+| Phase 1  | 仪表盘 UI 与设计系统                                    |  1.5–2 周 | GEO UI 先行                                                                   |
+| Phase 2  | 架构、模型路由、IPC 与数据库 Schema                         |  2–2.5 周 | 最终表结构、Model Router、Service 骨架                                               |
+| Phase 3  | 公司管理、公共对话历史与基础记忆                                |      2 周 | project CRUD、chat history、conversation memory                               |
+| Phase 4  | 文件清洗、语义切片与 Embedding 索引                         |  2–2.5 周 | cleaner、chunker、embedding、vec、FTS5                                          |
+| Phase 5  | Hybrid Retrieval 与 Evidence Pack                |  1.5–2 周 | Fact + FTS + Vector + Evidence Pack                                         |
+| Phase 6  | 企业事实抽取与人工确认                                     |  1.5–2 周 | DeepSeek JSON 事实抽取、confirmed facts                                          |
+| Phase 7  | 问题池、信源发现与文章生成 MVP                               |    3–4 周 | question pool、source discovery、title、support、ranking、claim map、draft review |
+| Phase 8  | Assistant Runtime、流式事件、工具审批与草稿体验                |  2.5–3 周 | assistant stream、tool approval、draft UI、execution ledger                    |
+| Phase 9  | Agent-first Task Runtime + Skill 编排             |    3–4 周 | DeepAgents.js、AllowedActionPolicy、ToolGuard、MemoryContextBuilder            |
+| Phase 10 | 发布计划、发布记录与豆包助手可见性检测                             |      2 周 | publish_records、visibility_checks、doubao_app                                |
+| Phase 11 | 反思学习系统                                          |    3–4 周 | Reflection Case Corpus、positive/negative samples、hypotheses                 |
+| Phase 12 | 稳定性、测试、恢复、预算与打包                                 |    2–3 周 | Recovery、LoopGuard、预算、端到端测试、打包                                              |
 
 总工期建议：
 
@@ -176,7 +190,7 @@ Phase 1–7：约 14–18 周
 Phase 2–7：约 12–15 周
 ```
 
-**MVP 范围冻结**：Phase 1–7 为当前 MVP。完成 Phase 7 后，产品具备「企业资料 → 清洗切片 → 事实抽取 → 人工确认 → 支持类/排行榜文章生成 → Claim-source 校验 → 人工审核」的最小闭环。Phase 8–12（完整 Assistant Runtime、Agent-first Runtime、真实发布/可见性、反思学习、稳定性测试）在本次基线 Sprint 后冻结，后续按顺序逐步实施，不在 MVP 内一次性交付。
+**MVP 范围冻结**：Phase 1–7 为当前 MVP。完成 Phase 7 后，产品具备「企业资料 → 清洗切片 → 事实抽取 → 人工确认 → Evidence Pack → 问题池生成 → 信源发现 → 标题生成 → 支持类/排行榜文章生成 → Claim-source 校验 → 人工审核」的最小闭环。Phase 8–12（完整 Assistant Runtime、Agent-first Runtime、真实发布/可见性、反思学习、稳定性测试）在本次基线 Sprint 后冻结，后续按顺序逐步实施，不在 MVP 内一次性交付。
 
 ---
 
@@ -568,12 +582,12 @@ derived_keywords
 
 ---
 
-## 12. Phase 7：文章生成 MVP：支持类文章与综合排行榜
+## 12. Phase 7：问题池、信源发现与文章生成 MVP
 
 目标：
 
 ```text
-完成 GEO Agent 第一版最核心的业务价值：基于 confirmed facts 和 Evidence Pack 生成可审核文章。
+基于 confirmed facts 和 Evidence Pack，完成目标问题生成、信源发现、标题生成，并生成可审核的支持类文章和综合排行榜文章。
 ```
 
 本 Phase 不依赖完整 Agent-first Runtime，可以通过普通 UI 按钮或基础 Assistant 触发。
@@ -581,27 +595,29 @@ derived_keywords
 任务：
 
 ```text
-1. Article Strategy Selection 初版。
-2. question-generation 初版。
-3. title-generation Skill。
-4. support-article-planning Skill。
-5. support-article-generation Skill。
-6. ranking-theme-selection Skill。
-7. ranking-criteria-generation Skill。
-8. ranking-reason-generation Skill。
-9. ranking-article-planning Skill。
-10. ranking-article-generation Skill。
-11. article-claim-mapping Skill。
-12. claim-review Skill。
-13. geo-review Skill。
-14. article_artifacts_meta。
-15. article_claims。
-16. article_claim_sources。
-17. article_reviews。
-18. ranking_article_items。
-19. ranking_criteria。
-20. Draft Management UI。
-21. Human Review UI。
+1. question-generation 初版。
+2. 问题池人工选择 / 编辑。
+3. source-discovery 初版。
+4. title-generation Skill。
+5. Article Strategy Selection 初版。
+6. support-article-planning Skill。
+7. support-article-generation Skill。
+8. ranking-theme-selection Skill。
+9. ranking-criteria-generation Skill。
+10. ranking-reason-generation Skill。
+11. ranking-article-planning Skill。
+12. ranking-article-generation Skill。
+13. article-claim-mapping Skill。
+14. claim-review Skill。
+15. geo-review Skill。
+16. article_artifacts_meta。
+17. article_claims。
+18. article_claim_sources。
+19. article_reviews。
+20. ranking_article_items。
+21. ranking_criteria。
+22. Draft Management UI。
+23. Human Review UI。
 ```
 
 文章战略：
@@ -638,6 +654,12 @@ derived_keywords
 验收：
 
 ```text
+可以生成目标问题池。
+用户可以选择、编辑或拒绝目标问题。
+每篇文章必须绑定一个 target_question。
+可以完成信源发现并生成 source_recommendation。
+每篇文章必须绑定 source_recommendation 或明确标记无外部信源。
+可以生成标题候选并评分。
 可以生成支持类文章。
 可以生成综合排行榜文章。
 综合榜目标企业默认位于第 2–5 位。
@@ -650,7 +672,7 @@ unsupported_claims 能被识别。
 MVP 完成标志：
 
 ```text
-知识库 → confirmed facts → Evidence Pack → 文章生成 → Claim Review → Human Review 跑通。
+知识库 → confirmed facts → Evidence Pack → 问题池 → 信源发现 → 标题生成 → 文章生成 → Claim Review → Human Review 跑通。
 ```
 
 ---
@@ -751,6 +773,8 @@ error
 24. MemoryContextBuilder 与 AgentContextBuilder 对齐。
 25. Skill Runtime 与 Agent Tool Registry 连接。
 ```
+
+> Phase 9 不首次实现 question-generation、source-discovery、title-generation 和 article-generation；这些能力应在 Phase 7 作为普通 UI / 基础 Assistant 可触发能力先落地。Phase 9 的职责是将这些已落地能力接入 Agent-first Runtime、AllowedActionPolicy、Dynamic Tool Registry 和 ToolGuard。
 
 推荐任务路径：
 
@@ -998,11 +1022,16 @@ active hypothesis 与 confirmed facts 冲突时被丢弃。
 5. 建立 Model Router。
 6. 建立 Skill Package 目录骨架。
 7. 优先创建文章生成相关 Skill：
+   ├── question-generation
+   ├── source-discovery
    ├── title-generation
+   ├── article-strategy-selection
+   ├── support-article-planning
    ├── support-article-generation
    ├── ranking-theme-selection
    ├── ranking-criteria-generation
    ├── ranking-reason-generation
+   ├── ranking-article-planning
    └── ranking-article-generation
 8. 暂缓完整反思学习自动化，先保留表结构和接口位置。
 ```
@@ -1025,6 +1054,14 @@ UI 先行
 Embedding / FTS5 / Hybrid Retrieval
 ↓
 企业事实抽取与确认
+↓
+Evidence Pack
+↓
+问题池生成
+↓
+信源发现
+↓
+标题生成
 ↓
 支持类文章 / 综合排行榜文章生成
 ↓

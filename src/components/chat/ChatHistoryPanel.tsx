@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SheetClose } from '@/components/ui/sheet';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
-import { History, Loader2, Plus, Search, Trash2 } from 'lucide-react';
+import { History, Loader2, MessageSquare, Plus, Search, Trash2, X } from 'lucide-react';
 import type { ChatSession, ChatMessage } from '@/types/domain';
 import { chatService } from '@/services/chatService';
 
@@ -25,6 +26,14 @@ function truncatePreview(text: string, max = 60): string {
   return text.slice(0, max) + '...';
 }
 
+function formatSessionDate(dateStr: string, lang: string): string {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 export default function ChatHistoryPanel({
   sessions,
   currentSessionId,
@@ -32,7 +41,7 @@ export default function ChatHistoryPanel({
   onNewChat,
   onDelete,
 }: ChatHistoryPanelProps) {
-  const { t, cls } = useTheme();
+  const { t, cls, lang } = useTheme();
   const [query, setQuery] = useState('');
   const [messagesMap, setMessagesMap] = useState<Record<number, ChatMessage[]>>({});
   const [loading, setLoading] = useState(false);
@@ -130,26 +139,46 @@ export default function ChatHistoryPanel({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between pb-4 pr-8">
+      <div className="flex items-center justify-between pb-4">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <History className="w-5 h-5 text-[#F37021]" />
           {t.chatHistory}
         </h2>
-        <Button variant="outline" size="sm" onClick={onNewChat} className="gap-1">
-          <Plus className="w-4 h-4" />
-          {t.chatNewSession}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onNewChat}
+            className={cn('gap-1', cls('hover:bg-gray-100', 'hover:bg-zinc-800'))}
+          >
+            <Plus className="w-4 h-4" />
+            {t.chatNewSession}
+          </Button>
+          <SheetClose asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn('h-8 w-8', cls('hover:bg-gray-100', 'hover:bg-zinc-800'))}
+              aria-label={t.closeMenu}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </SheetClose>
+        </div>
       </div>
 
-      <div className="relative pb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className={cn(
+        'flex items-center gap-2 rounded-full h-10 px-3 mb-4',
+        cls('bg-gray-100', 'bg-zinc-800')
+      )}>
+        <Search className="w-4 h-4 text-muted-foreground shrink-0" />
         <Input
           placeholder={t.chatHistorySearchPlaceholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className={cn(
-            'pl-9 rounded-full',
-            cls('bg-gray-100 border-transparent', 'bg-zinc-800 border-transparent')
+            'border-0 bg-transparent focus-visible:ring-0 h-full px-0 py-0 shadow-none',
+            cls('placeholder:text-gray-500', 'placeholder:text-zinc-400')
           )}
         />
       </div>
@@ -189,7 +218,7 @@ export default function ChatHistoryPanel({
                           key={session.id}
                           onClick={() => onSelect(session)}
                           className={cn(
-                            'group relative flex flex-col gap-1 p-3 rounded-xl cursor-pointer transition-colors border',
+                            'group flex flex-col gap-1.5 p-3 rounded-xl cursor-pointer transition-colors border',
                             isActive
                               ? 'bg-[#F37021]/10 border-[#F37021]/20'
                               : cls(
@@ -198,12 +227,17 @@ export default function ChatHistoryPanel({
                                 )
                           )}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-medium truncate flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="text-sm font-medium truncate flex-1 min-w-0">
                               {session.title || t.chatNewSession}
                             </p>
-                            <span className="shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-[#F37021]/10 text-[#F37021]">
-                              {countMap[session.id] ?? 0}
+                            <span
+                              className={cn(
+                                'text-xs shrink-0',
+                                cls('text-gray-500', 'text-zinc-400')
+                              )}
+                            >
+                              {formatSessionDate(session.created_at, lang)}
                             </span>
                           </div>
                           <p
@@ -214,17 +248,31 @@ export default function ChatHistoryPanel({
                           >
                             {previewMap[session.id] || t.chatHistoryNoMessages}
                           </p>
-                          {onDelete && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(session.id);
-                              }}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-opacity hover:bg-red-50 dark:hover:bg-red-950/20"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </button>
-                          )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MessageSquare className="w-3 h-3" />
+                              <span>
+                                {countMap[session.id] ?? 0}
+                                {t.chatMessagesSuffix}
+                              </span>
+                            </div>
+                            {onDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDelete(session.id);
+                                }}
+                                className={cn(
+                                  'h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity',
+                                  'text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20'
+                                )}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       );
                     })}

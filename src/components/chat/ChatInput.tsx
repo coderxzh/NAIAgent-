@@ -20,9 +20,6 @@ import {
 import {
   Plus,
   X,
-  Image,
-  Box,
-  FileText,
   Send,
   FolderOpen,
   ChevronDown,
@@ -214,40 +211,14 @@ export default function ChatInput({
 
         <PromptInputFooter className="justify-between items-center pt-2">
           <PromptInputTools className="items-center gap-1">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <PromptInputButton
-                  type="button"
-                  tooltip={t.chatAttachFiles}
-                  className="rounded-full size-10 hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
-                >
-                  <Plus className="w-5 h-5 shrink-0" strokeWidth={1.8} />
-                </PromptInputButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="top" className="w-56 rounded-2xl p-2">
-                <DropdownMenuItem
-                  onClick={() => fileInputRef.current?.click()}
-                  className="rounded-xl px-3 py-2.5 gap-3 cursor-pointer"
-                >
-                  <Image className="w-4 h-4 text-muted-foreground" strokeWidth={1.8} />
-                  <span className="text-sm font-medium">{t.addPhotosOrVideos}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => fileInputRef.current?.click()}
-                  className="rounded-xl px-3 py-2.5 gap-3 cursor-pointer"
-                >
-                  <Box className="w-4 h-4 text-muted-foreground" strokeWidth={1.8} />
-                  <span className="text-sm font-medium">{t.add3DObjects}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => fileInputRef.current?.click()}
-                  className="rounded-xl px-3 py-2.5 gap-3 cursor-pointer"
-                >
-                  <FileText className="w-4 h-4 text-muted-foreground" strokeWidth={1.8} />
-                  <span className="text-sm font-medium">{t.addFiles}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <PromptInputButton
+              type="button"
+              tooltip={t.addFiles}
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-full size-10 hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
+            >
+              <Plus className="w-5 h-5 shrink-0" strokeWidth={1.8} />
+            </PromptInputButton>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -285,7 +256,7 @@ export default function ChatInput({
           </PromptInputTools>
 
           <PromptInputTools className="items-center gap-1.5">
-            <div className="rounded-full h-9 px-3 flex items-center gap-2 text-sm font-medium text-muted-foreground bg-black/5 dark:bg-white/10 select-none">
+            <div className="rounded-full h-9 px-3 flex items-center gap-2 text-sm font-medium text-muted-foreground select-none">
               Auto
             </div>
 

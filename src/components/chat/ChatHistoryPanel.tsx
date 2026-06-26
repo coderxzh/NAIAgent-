@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SheetClose } from '@/components/ui/sheet';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
-import { History, Loader2, MessageSquare, Plus, Search, Trash2 } from 'lucide-react';
+import { History, Loader2, MessageSquare, Plus, Search, Trash2, X } from 'lucide-react';
 import type { ChatSession, ChatMessage } from '@/types/domain';
 import { chatService } from '@/services/chatService';
 
@@ -138,20 +139,32 @@ export default function ChatHistoryPanel({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between pb-4 pr-8">
+      <div className="flex items-center justify-between pb-4">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <History className="w-5 h-5 text-[#F37021]" />
           {t.chatHistory}
         </h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onNewChat}
-          className={cn('gap-1', cls('hover:bg-gray-100', 'hover:bg-zinc-800'))}
-        >
-          <Plus className="w-4 h-4" />
-          {t.chatNewSession}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onNewChat}
+            className={cn('gap-1', cls('hover:bg-gray-100', 'hover:bg-zinc-800'))}
+          >
+            <Plus className="w-4 h-4" />
+            {t.chatNewSession}
+          </Button>
+          <SheetClose asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn('h-8 w-8', cls('hover:bg-gray-100', 'hover:bg-zinc-800'))}
+              aria-label={t.closeMenu}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </SheetClose>
+        </div>
       </div>
 
       <div className={cn(

@@ -38,6 +38,7 @@ export default function ChatHistoryDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent
+        showCloseButton={false}
         className={cn(
           'w-[360px] sm:w-[400px] p-6',
           cls('bg-white', 'bg-[#1c1c1f]')

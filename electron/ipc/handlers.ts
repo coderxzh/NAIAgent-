@@ -48,6 +48,13 @@ import {
 import {indexEntry} from '../services/indexingService.ts';
 import {embedText} from '../services/embedding.ts';
 import {searchSimilarChunks} from '../services/vectorStore.ts';
+import {
+  createProject,
+  listProjects,
+  getProject,
+  updateProject,
+  deleteProject,
+} from '../services/projectService.ts';
 import {askQuestion} from '../services/ragService.ts';
 import {runMinimalAgentTask} from '../services/agent/geoAgentRuntime.ts';
 import {extractFacts} from '../services/facts/factExtractionService.ts';
@@ -62,7 +69,6 @@ import type {IpcChannels} from './channels.ts';
 import type {
   AgentArtifact,
   AgentTask,
-  Project,
   PublishRecord,
 } from '@/types/domain';
 
@@ -139,58 +145,25 @@ export function registerIpcHandlers() {
   // 项目
   createHandler('project:create', (data) => {
     const validated = ProjectCreateSchema.parse(data);
-    const result = db
-      .prepare(
-        "INSERT INTO projects (name, description, industry, region, status, created_at, updated_at) VALUES (?, ?, ?, ?, 'active', datetime('now'), datetime('now'))",
-      )
-      .run(
-        validated.name,
-        validated.description ?? null,
-        validated.industry ?? null,
-        validated.region ?? null,
-      );
-    return db
-      .prepare('SELECT * FROM projects WHERE id = ?')
-      .get(Number(result.lastInsertRowid)) as Project;
+    return createProject(validated as { name: string; description?: string; industry?: string; region?: string });
   });
 
-  createHandler('project:list', () => {
-    return db
-      .prepare('SELECT * FROM projects ORDER BY updated_at DESC')
-      .all();
-  });
+  createHandler('project:list', () => listProjects());
 
   createHandler('project:get', (id) => {
     const validated = ProjectIdSchema.parse(id);
-    return (
-      (db.prepare('SELECT * FROM projects WHERE id = ?').get(validated) as
-        | Project
-        | undefined) ?? null
-    );
+    return getProject(validated);
   });
 
   createHandler('project:update', (id, data) => {
     const validatedId = ProjectIdSchema.parse(id);
-    ProjectUpdateSchema.parse({id: validatedId, data});
-
-    const fields: string[] = [];
-    const params: unknown[] = [];
-    for (const [key, value] of Object.entries(data)) {
-      if (['name', 'description', 'industry', 'region', 'status'].includes(key)) {
-        fields.push(`${key} = ?`);
-        params.push(value);
-      }
-    }
-    if (fields.length === 0) return;
-    fields.push("updated_at = datetime('now')");
-    params.push(validatedId);
-
-    db.prepare(`UPDATE projects SET ${fields.join(', ')} WHERE id = ?`).run(...params);
+    ProjectUpdateSchema.parse({ id: validatedId, data });
+    updateProject(validatedId, data);
   });
 
   createHandler('project:delete', (id) => {
     const validated = ProjectIdSchema.parse(id);
-    db.prepare('DELETE FROM projects WHERE id = ?').run(validated);
+    deleteProject(validated);
   });
 
   // 知识库

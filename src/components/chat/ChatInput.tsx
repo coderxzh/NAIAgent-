@@ -36,6 +36,7 @@ interface ChatInputProps {
   onFileUpload: (files: UploadedFile[]) => void;
   onRemoveFile: (id: string) => void;
   isLoading: boolean;
+  isStreaming?: boolean;
   onStop: () => void;
   selectedProject?: string;
   onProjectChange?: (project: string) => void;
@@ -62,6 +63,7 @@ export default function ChatInput({
   onFileUpload,
   onRemoveFile,
   isLoading,
+  isStreaming,
   onStop,
   selectedProject,
   onProjectChange,
@@ -261,12 +263,12 @@ export default function ChatInput({
             </div>
 
             <PromptInputSubmit
-              status={isLoading ? 'submitted' : 'ready'}
+              status={isStreaming ? 'streaming' : isLoading ? 'submitted' : 'ready'}
               onStop={onStop}
-              disabled={!hasContent && !isLoading}
+              disabled={!hasContent && !isLoading && !isStreaming}
               className={`
                 rounded-full size-10 transition-all duration-200
-                ${hasContent || isLoading
+                ${hasContent || isLoading || isStreaming
                   ? 'bg-[#F37021] text-white hover:bg-[#F37021]/90 shadow-sm'
                   : 'bg-transparent text-muted-foreground'}
               `}

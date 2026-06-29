@@ -12,7 +12,7 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
   const { currentProject } = useAppState();
 
   return (
-    <header className="flex justify-between items-center mb-6">
+    <header className="flex justify-between items-center mb-6 shrink-0">
       <div className="flex items-center gap-4">
         <button
           onClick={onOpenMobileMenu}

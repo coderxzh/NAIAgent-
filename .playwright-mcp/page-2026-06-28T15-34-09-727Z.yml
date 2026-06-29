@@ -1,0 +1,120 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - generic [ref=e9]: NAI Agent
+    - generic [ref=e10]:
+      - button "Minimize" [ref=e11]:
+        - img [ref=e12]
+      - button "Maximize" [ref=e13]:
+        - img [ref=e14]
+      - button "Close" [ref=e19]:
+        - img [ref=e20]
+  - generic [ref=e23]:
+    - complementary [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e33]: NAI Agent
+        - button "收起侧边栏" [ref=e34]:
+          - img [ref=e35]
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - heading "主菜单" [level=3] [ref=e40]
+          - navigation [ref=e41]:
+            - button "仪表盘" [ref=e42]:
+              - img [ref=e43]
+              - generic [ref=e48]: 仪表盘
+            - button "智能Agent" [active] [ref=e49]:
+              - img [ref=e50]
+              - generic [ref=e53]: 智能Agent
+            - button "文章生成" [ref=e54]:
+              - img [ref=e55]
+              - generic [ref=e58]: 文章生成
+            - button "稿件管理" [ref=e59]:
+              - img [ref=e60]
+              - generic [ref=e63]: 稿件管理
+            - button "自动学习" [ref=e64]:
+              - img [ref=e65]
+              - generic [ref=e67]: 自动学习
+            - button "AI网站构建" [ref=e68]:
+              - img [ref=e69]
+              - generic [ref=e72]: AI网站构建
+            - button "事实审核" [ref=e73]:
+              - img [ref=e74]
+              - generic [ref=e78]: 事实审核
+        - button "收起企业列表" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81]:
+            - img [ref=e82]
+            - generic [ref=e84]: 企业
+          - button "添加项目" [ref=e85]:
+            - img [ref=e86]
+      - generic [ref=e91]:
+        - button "设置" [ref=e92]:
+          - img [ref=e93]
+          - generic [ref=e96]: 设置
+        - button "退出登录" [ref=e97]:
+          - img [ref=e98]
+          - generic [ref=e101]: 退出登录
+    - generic [ref=e102]:
+      - banner
+      - generic [ref=e257]:
+        - generic [ref=e258]:
+          - heading "你好，GEO Agent" [level=1] [ref=e259]
+          - paragraph [ref=e260]: 随时掌控 GEO 优化进度与企业知识库状态。
+        - generic [ref=e262]:
+          - img [ref=e264]
+          - heading "暂无统计数据" [level=3] [ref=e266]
+          - paragraph [ref=e267]: 数据将在后续阶段提供。
+        - generic [ref=e268]:
+          - generic [ref=e270]:
+            - heading "GEO 运行趋势" [level=3] [ref=e271]
+            - generic [ref=e273]:
+              - 'application "area chart with 1 data series: GEO 运行" [ref=e274]':
+                - generic [ref=e277]:
+                  - generic "6" [ref=e278]
+                  - generic "5" [ref=e279]
+                  - generic "4" [ref=e280]
+                  - generic "3" [ref=e281]
+                  - generic "2" [ref=e282]
+                  - generic "1" [ref=e283]
+                  - generic "0" [ref=e284]
+              - status [ref=e289]
+          - generic [ref=e291]:
+            - heading "暂无待办事项" [level=3] [ref=e292]
+            - paragraph [ref=e293]: 所有任务已处理完毕。
+        - generic [ref=e294]:
+          - generic [ref=e296]:
+            - heading "暂无活动记录" [level=3] [ref=e297]
+            - paragraph [ref=e298]: 近期活动将在此显示。
+          - generic [ref=e299]:
+            - heading "快速开始" [level=3] [ref=e300]
+            - generic [ref=e301]:
+              - button "生成稿件 基于知识库生成 GEO 优化文章。" [ref=e302]:
+                - img [ref=e304]
+                - generic [ref=e307]:
+                  - paragraph [ref=e308]: 生成稿件
+                  - paragraph [ref=e309]: 基于知识库生成 GEO 优化文章。
+              - button "更新知识库 上传文档并更新索引。" [ref=e310]:
+                - img [ref=e312]
+                - generic [ref=e314]:
+                  - paragraph [ref=e315]: 更新知识库
+                  - paragraph [ref=e316]: 上传文档并更新索引。
+              - button "发布到渠道 一键分发到搜狐、网易等平台。" [ref=e317]:
+                - img [ref=e319]
+                - generic [ref=e322]:
+                  - paragraph [ref=e323]: 发布到渠道
+                  - paragraph [ref=e324]: 一键分发到搜狐、网易等平台。
+              - button "AI 优化建议 获取智能优化策略。" [ref=e325]:
+                - img [ref=e327]
+                - generic [ref=e330]:
+                  - paragraph [ref=e331]: AI 优化建议
+                  - paragraph [ref=e332]: 获取智能优化策略。
+          - generic [ref=e334]:
+            - heading "知识库为空" [level=3] [ref=e335]
+            - paragraph [ref=e336]: 上传文档以建立知识库索引。
+        - generic [ref=e337]:
+          - generic [ref=e339]:
+            - heading "暂无可见性数据" [level=3] [ref=e340]
+            - paragraph [ref=e341]: 运行可见性检测后结果将在此显示。
+          - generic [ref=e343]:
+            - heading "暂无优化假设" [level=3] [ref=e344]
+            - paragraph [ref=e345]: 运行 AI 优化建议后将生成假设规则。

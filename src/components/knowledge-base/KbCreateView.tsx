@@ -5,11 +5,13 @@ import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
 import {Progress} from '@/components/ui/progress';
 import {Badge} from '@/components/ui/badge';
-import {dialogApi} from '@/lib/electron-api';
+import {dialogApi, factApi} from '@/lib/electron-api';
 import {useTheme} from '@/hooks/use-theme';
 import {useView} from '@/context/ViewContext';
+import {useAppState} from '@/context/AppStateContext';
 import {projectService} from '@/services/projectService';
 import {knowledgeBaseService} from '@/services/knowledgeBaseService';
+import PendingFactChatCard, {FactItem} from '@/components/facts/PendingFactChatCard';
 import {cn} from '@/lib/utils';
 import {
   Upload,
@@ -45,6 +47,7 @@ const formFields = [
 export default function KbCreateView() {
   const {cls, t} = useTheme();
   const {navigateTo} = useView();
+  const {setCurrentProject} = useAppState();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -54,6 +57,7 @@ export default function KbCreateView() {
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
   const [createdProjectId, setCreatedProjectId] = useState<number | null>(null);
+  const [pendingFacts, setPendingFacts] = useState<FactItem[]>([]);
   const [entryCount, setEntryCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,6 +70,8 @@ export default function KbCreateView() {
     files.length > 0 ||
     textContent.trim().length > 0 ||
     Object.values(formData).some((v) => v?.trim());
+
+  const allFactsReviewed = pendingFacts.length > 0 && pendingFacts.every((f) => f.status !== 'candidate');
 
   const handleFileSelect = async () => {
     const paths = await dialogApi.openFile({
@@ -103,7 +109,12 @@ export default function KbCreateView() {
         description: projectDescription,
       });
       setCreatedProjectId(projectId);
-      setProgress(30);
+
+      const project = await projectService.getById(projectId);
+      if (project) {
+        setCurrentProject(project);
+      }
+      setProgress(20);
 
       const entries: {title: string; type: 'text' | 'file'; value: string}[] = [];
 
@@ -134,9 +145,13 @@ export default function KbCreateView() {
           await knowledgeBaseService.ingestFile(projectId, entry.title, entry.value);
         }
         completed++;
-        setProgress(30 + Math.round((completed / total) * 60));
+        setProgress(20 + Math.round((completed / total) * 50));
       }
 
+      setStatusMessage(t.kbExtractingFacts ?? '正在抽取企业事实...');
+      await factApi.extract({projectId});
+      const pending = await factApi.listPending({projectId});
+      setPendingFacts(pending.slice(0, 20));
       setEntryCount(entries.length);
       setProgress(100);
       setStep(3);
@@ -145,7 +160,7 @@ export default function KbCreateView() {
       setError(err instanceof Error ? err.message : '创建失败');
       setStep(1);
     }
-  }, [formData, files, projectDescription, projectName, textContent]);
+  }, [formData, files, projectDescription, projectName, textContent, setCurrentProject, t.kbExtractingFacts]);
 
   const handleFinish = () => {
     if (createdProjectId) {
@@ -275,27 +290,48 @@ export default function KbCreateView() {
     </Card>
   );
 
-  const renderStep3 = () => (
-    <Card className={cn('p-12 text-center', cls('bg-white', 'bg-[#1c1c1f]'))}>
-      <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-6">
-        <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-      </div>
-      <h3 className="text-xl font-bold mb-2">企业知识库已建立</h3>
-      <p className={cn('text-sm', cls('text-gray-500', 'text-zinc-400'))}>
-        项目“{projectName}”已创建，共录入 {entryCount} 条资料。
-      </p>
-      <div className="mt-6 flex justify-center gap-3">
-        <Button variant="outline" onClick={() => navigateTo('dashboard')} className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          返回仪表盘
-        </Button>
-        <Button onClick={handleFinish} className="gap-2">
-          进入知识库
-          <ArrowRight className="w-4 h-4" />
-        </Button>
-      </div>
-    </Card>
-  );
+  const renderStep3 = () => {
+    if (pendingFacts.length > 0 && !allFactsReviewed) {
+      return (
+        <div className="space-y-6">
+          <Card className={cn('p-6', cls('bg-white', 'bg-[#1c1c1f]'))}>
+            <h3 className="text-lg font-bold mb-2">{t.kbFactReviewTitle}</h3>
+            <p className={cn('text-sm mb-4', cls('text-gray-500', 'text-zinc-400'))}>
+              {t.kbFactReviewHint}
+            </p>
+            <PendingFactChatCard
+              facts={pendingFacts}
+              onPendingChange={setPendingFacts}
+            />
+          </Card>
+        </div>
+      );
+    }
+
+    return (
+      <Card className={cn('p-12 text-center', cls('bg-white', 'bg-[#1c1c1f]'))}>
+        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+        </div>
+        <h3 className="text-xl font-bold mb-2">{t.kbFactReviewComplete}</h3>
+        <p className={cn('text-sm', cls('text-gray-500', 'text-zinc-400'))}>
+          {pendingFacts.length > 0
+            ? `项目“${projectName}”已创建，共录入 ${entryCount} 条资料，已确认 ${pendingFacts.filter((f) => f.status === 'confirmed').length} 条事实。`
+            : `项目“${projectName}”已创建，共录入 ${entryCount} 条资料。`}
+        </p>
+        <div className="mt-6 flex justify-center gap-3">
+          <Button variant="outline" onClick={() => navigateTo('dashboard')} className="gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            {t.kbBackToDashboard}
+          </Button>
+          <Button onClick={handleFinish} className="gap-2">
+            {t.kbEnterKnowledgeBase}
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

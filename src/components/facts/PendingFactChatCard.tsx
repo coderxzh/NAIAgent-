@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useCallback, useState} from 'react';
 import {useTheme} from '../../hooks/use-theme';
 import {useAppState} from '../../context/AppStateContext';
 import {Button} from '@/components/ui/button';
@@ -10,7 +10,7 @@ import {factApi} from '../../lib/electron-api';
 import {getFactTypeLabel} from '../../../electron/services/facts/factTypes';
 import type {FactReviewIntent} from '../../types/domain';
 
-interface FactItem {
+export interface FactItem {
   id: number;
   fact_type: string;
   fact_key: string;
@@ -23,29 +23,40 @@ interface FactItem {
 interface PendingFactChatCardProps {
   content?: string;
   facts: FactItem[];
+  onPendingChange?: (facts: FactItem[]) => void;
 }
 
-export default function PendingFactChatCard({content, facts}: PendingFactChatCardProps) {
+export default function PendingFactChatCard({content, facts, onPendingChange}: PendingFactChatCardProps) {
   const {t, cls} = useTheme();
   const {currentProject} = useAppState();
   const [items, setItems] = useState(facts);
   const [intentText, setIntentText] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  const notifyChange = useCallback((next: FactItem[]) => {
+    onPendingChange?.(next);
+  }, [onPendingChange]);
+
   const reloadPending = async () => {
     if (!currentProject) return;
     const pending = await factApi.listPending({projectId: currentProject.id});
-    setItems(pending.slice(0, 20));
+    const next = pending.slice(0, 20);
+    setItems(next);
+    notifyChange(next);
   };
 
   const handleConfirm = async (id: number) => {
     await factApi.confirm({factIds: [id]});
-    setItems((prev) => prev.map((f) => (f.id === id ? {...f, status: 'confirmed'} : f)));
+    const next = items.map((f) => (f.id === id ? {...f, status: 'confirmed'} : f));
+    setItems(next);
+    notifyChange(next);
   };
 
   const handleReject = async (id: number) => {
     await factApi.reject({factIds: [id]});
-    setItems((prev) => prev.map((f) => (f.id === id ? {...f, status: 'rejected'} : f)));
+    const next = items.map((f) => (f.id === id ? {...f, status: 'rejected'} : f));
+    setItems(next);
+    notifyChange(next);
   };
 
   const handleIntentSubmit = async () => {

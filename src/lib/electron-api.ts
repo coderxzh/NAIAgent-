@@ -142,3 +142,17 @@ export const reflectionApi = {
   reject: (id: number) => api.invoke('reflection:reject', id),
   archive: (id: number) => api.invoke('reflection:archive', id),
 };
+
+export const articleApi = {
+  generate: (params: Parameters<IpcChannels['article:generate']>[0]) =>
+    api.invoke('article:generate', params),
+  list: (projectId: number) => api.invoke('article:list', projectId),
+  get: (artifactId: number) => api.invoke('article:get', artifactId),
+  claimReview: (artifactId: number) => api.invoke('article:claimReview', artifactId),
+  geoReview: (artifactId: number) => api.invoke('article:geoReview', artifactId),
+  updateStatus: (
+    artifactId: number,
+    status: Parameters<IpcChannels['article:updateStatus']>[1],
+  ) => api.invoke('article:updateStatus', artifactId, status),
+  updateContent: (artifactId: number, content: string) => api.invoke('article:updateContent', artifactId, content),
+};

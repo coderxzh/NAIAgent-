@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, FileText, BookOpen, Globe, LogOut, ChevronRight, Plus, ChevronDown, X, PanelLeftClose, ClipboardCheck } from 'lucide-react';
+import { LayoutDashboard, Settings, FileText, BookOpen, Globe, LogOut, ChevronRight, Plus, ChevronDown, X, PanelLeftClose, ClipboardCheck, Sparkles } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from '../../hooks/use-theme';
@@ -18,9 +18,10 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
-const mainMenu: { id: View; icon: React.ComponentType<{ className?: string }>; labelKey: 'dashboard' | 'aiAgent' | 'drafts' | 'autoLearning' | 'aiWebBuilder' | 'factReview' }[] = [
+const mainMenu: { id: View; icon: React.ComponentType<{ className?: string }>; labelKey: 'dashboard' | 'aiAgent' | 'drafts' | 'articleGeneration' | 'autoLearning' | 'aiWebBuilder' | 'factReview' }[] = [
   { id: 'dashboard', icon: LayoutDashboard, labelKey: 'dashboard' },
   { id: 'aiAgent', icon: Settings, labelKey: 'aiAgent' },
+  { id: 'articleGeneration', icon: Sparkles, labelKey: 'articleGeneration' },
   { id: 'drafts', icon: FileText, labelKey: 'drafts' },
   { id: 'autoLearning', icon: BookOpen, labelKey: 'autoLearning' },
   { id: 'aiWebBuilder', icon: Globe, labelKey: 'aiWebBuilder' },

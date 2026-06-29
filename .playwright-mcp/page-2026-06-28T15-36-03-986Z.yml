@@ -1,0 +1,91 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - generic [ref=e9]: NAI Agent
+    - generic [ref=e10]:
+      - button "Minimize" [ref=e11]:
+        - img [ref=e12]
+      - button "Maximize" [ref=e13]:
+        - img [ref=e14]
+      - button "Close" [ref=e19]:
+        - img [ref=e20]
+  - generic [ref=e23]:
+    - complementary [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e33]: NAI Agent
+        - button "收起侧边栏" [ref=e34]:
+          - img [ref=e35]
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - heading "主菜单" [level=3] [ref=e40]
+          - navigation [ref=e41]:
+            - button "仪表盘" [ref=e42]:
+              - img [ref=e43]
+              - generic [ref=e48]: 仪表盘
+            - button "智能Agent" [active] [ref=e49]:
+              - img [ref=e50]
+              - generic [ref=e53]: 智能Agent
+            - button "文章生成" [ref=e54]:
+              - img [ref=e55]
+              - generic [ref=e58]: 文章生成
+            - button "稿件管理" [ref=e59]:
+              - img [ref=e60]
+              - generic [ref=e63]: 稿件管理
+            - button "自动学习" [ref=e64]:
+              - img [ref=e65]
+              - generic [ref=e67]: 自动学习
+            - button "AI网站构建" [ref=e68]:
+              - img [ref=e69]
+              - generic [ref=e72]: AI网站构建
+            - button "事实审核" [ref=e73]:
+              - img [ref=e74]
+              - generic [ref=e78]: 事实审核
+        - button "收起企业列表" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81]:
+            - img [ref=e82]
+            - generic [ref=e84]: 企业
+          - button "添加项目" [ref=e85]:
+            - img [ref=e86]
+      - generic [ref=e91]:
+        - button "设置" [ref=e92]:
+          - img [ref=e93]
+          - generic [ref=e96]: 设置
+        - button "退出登录" [ref=e97]:
+          - img [ref=e98]
+          - generic [ref=e101]: 退出登录
+    - generic [ref=e102]:
+      - banner
+      - generic [ref=e188]:
+        - generic [ref=e189]:
+          - button "新对话" [ref=e190]:
+            - img
+            - text: 新对话
+          - button "历史记录" [ref=e191]:
+            - img
+            - text: 历史记录
+        - generic [ref=e192]:
+          - log [ref=e193]:
+            - generic [ref=e196]:
+              - generic [ref=e197]:
+                - heading "你好，GEO Agent" [level=1] [ref=e198]
+                - paragraph [ref=e199]: 基于企业知识库，生成 GEO 优化内容与策略。
+              - generic [ref=e200]:
+                - button "基于知识库生成 GEO 优化文章。" [ref=e201] [cursor=pointer]
+                - button "上传文档并更新索引。" [ref=e202] [cursor=pointer]
+                - button "获取智能优化策略。" [ref=e203] [cursor=pointer]
+                - button "一键分发到搜狐、网易等平台。" [ref=e204] [cursor=pointer]
+          - group [ref=e208]:
+            - textbox "描述你的 3D 对象或场景..." [ref=e209]
+            - group [ref=e210]:
+              - generic [ref=e211]:
+                - button [ref=e212]:
+                  - img
+                - button "当前项目" [ref=e213]:
+                  - img
+                  - generic [ref=e214]: 当前项目
+                  - img
+              - generic [ref=e215]:
+                - generic [ref=e216]: Auto
+                - button "Submit" [disabled]:
+                  - img

@@ -11,6 +11,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import KbIngestPanel from './components/knowledge-base/KbIngestPanel';
 import KbCreateView from './components/knowledge-base/KbCreateView';
 import FactReviewView from './components/facts/FactReviewView';
+import ArticleGenerationView from './components/article-generation/ArticleGenerationView';
 import type { View } from './types/domain';
 
 function KbIngestWrapper() {
@@ -29,6 +30,7 @@ const viewComponents: Record<View, React.ComponentType> = {
   kbIngest: KbIngestWrapper,
   kbCreate: KbCreateView,
   factReview: FactReviewView,
+  articleGeneration: ArticleGenerationView,
 };
 
 export default function App() {
@@ -44,7 +46,7 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -15 }}
           transition={{ duration: 0.3 }}
-          className="flex-1"
+          className="flex-1 min-h-0 overflow-hidden"
         >
           <ErrorBoundary>
             <ActiveComponent />

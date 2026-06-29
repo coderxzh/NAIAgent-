@@ -14,6 +14,8 @@ export type ModelRole =
   | 'embedding'
   | 'visibility_check'
   | 'fact_extraction'
+  | 'claim_parsing'
+  | 'claim_review'
   | 'memory_summary'
   | 'context_compression'
   | 'workflow_planning'

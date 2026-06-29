@@ -7,7 +7,8 @@ export type View =
   | 'aiWebBuilder'
   | 'kbIngest'
   | 'kbCreate'
-  | 'factReview';
+  | 'factReview'
+  | 'articleGeneration';
 
 // 通用状态枚举
 export type TaskStatus =

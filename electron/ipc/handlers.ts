@@ -7,6 +7,10 @@ import {
   AgentTaskListSchema,
   AgentTaskRunSchema,
   AppPathSchema,
+  ArticleGenerateSchema,
+  ArticleIdSchema,
+  ArticleStatusSchema,
+  ArticleUpdateContentSchema,
   AssistantHistorySchema,
   AssistantQueueListSchema,
   AssistantQueueUpdateSchema,
@@ -65,6 +69,18 @@ import {
   getPendingReviewSession,
 } from '../services/facts/pendingFactReviewService.ts';
 import {listFacts} from '../services/facts/factRepository.ts';
+import {generateArticle} from '../services/article/articleGenerationService.ts';
+import {reviewClaims} from '../services/article/claimReviewService.ts';
+import {reviewGeo} from '../services/article/geoReviewService.ts';
+import {
+  listArticlesByProject,
+  getArtifactById,
+  getArticleMetaByArtifactId,
+  getClaimsWithSources,
+  getReviewsByArtifactId,
+  updateArticleStatus,
+  updateArticleContent,
+} from '../services/article/articleRepository.ts';
 import type {IpcChannels} from './channels.ts';
 import type {
   AgentArtifact,
@@ -589,6 +605,61 @@ export function registerIpcHandlers() {
     db.prepare(
       "UPDATE reflection_hypotheses SET status = 'archived', updated_at = datetime('now') WHERE id = ?",
     ).run(validated);
+  });
+
+  // 文章生成
+  createHandler('article:generate', async (params) => {
+    const validated = ArticleGenerateSchema.parse(params);
+    return generateArticle({
+      projectId: validated.projectId,
+      strategy: validated.strategy,
+      supportArticleType: validated.supportArticleType as
+        | 'enterprise_profile'
+        | undefined,
+      targetQuestion: validated.targetQuestion,
+      title: validated.title,
+    });
+  });
+
+  createHandler('article:list', (projectId) => {
+    const validated = ArticleIdSchema.parse(projectId);
+    return listArticlesByProject(validated);
+  });
+
+  createHandler('article:get', (artifactId) => {
+    const validated = ArticleIdSchema.parse(artifactId);
+    const artifact = getArtifactById(validated);
+    const meta = getArticleMetaByArtifactId(validated);
+    if (!artifact || !meta) {
+      throw new Error(`Article ${validated} not found`);
+    }
+    return {
+      artifact,
+      meta,
+      claims: getClaimsWithSources(validated),
+      reviews: getReviewsByArtifactId(validated),
+    };
+  });
+
+  createHandler('article:claimReview', async (artifactId) => {
+    const validated = ArticleIdSchema.parse(artifactId);
+    return reviewClaims(validated);
+  });
+
+  createHandler('article:geoReview', async (artifactId) => {
+    const validated = ArticleIdSchema.parse(artifactId);
+    return reviewGeo(validated);
+  });
+
+  createHandler('article:updateStatus', (artifactId, status) => {
+    const validatedId = ArticleIdSchema.parse(artifactId);
+    const validatedStatus = ArticleStatusSchema.parse(status);
+    updateArticleStatus(validatedId, validatedStatus);
+  });
+
+  createHandler('article:updateContent', (artifactId, content) => {
+    const validated = ArticleUpdateContentSchema.parse({artifactId, content});
+    updateArticleContent(validated.artifactId, validated.content);
   });
 
   // 窗口

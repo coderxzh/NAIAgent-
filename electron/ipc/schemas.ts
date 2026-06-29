@@ -229,3 +229,27 @@ export const ReflectionListSchema = z.object({
 });
 
 export const ReflectionIdSchema = z.number().int().positive();
+
+// Article
+export const ArticleGenerateSchema = z.object({
+  projectId: z.number().int().positive(),
+  strategy: z.literal('support_article'),
+  supportArticleType: z.string().optional(),
+  targetQuestion: z.string().min(1),
+  title: z.string().optional(),
+});
+
+export const ArticleIdSchema = z.number().int().positive();
+
+export const ArticleStatusSchema = z.enum([
+  'draft',
+  'claim_reviewed',
+  'geo_reviewed',
+  'approved',
+  'rejected',
+]);
+
+export const ArticleUpdateContentSchema = z.object({
+  artifactId: z.number().int().positive(),
+  content: z.string(),
+});

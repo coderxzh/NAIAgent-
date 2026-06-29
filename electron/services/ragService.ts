@@ -75,7 +75,7 @@ function qualityWeight(score: number): number {
   return 0;
 }
 
-async function buildEvidencePack(
+export async function buildEvidencePack(
   projectId: number,
   query: string,
   topK = 5,

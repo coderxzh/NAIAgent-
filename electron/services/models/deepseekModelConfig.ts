@@ -80,6 +80,30 @@ export const DEEPSEEK_MODEL_ROUTES: Record<string, ModelRoute> = {
     timeoutMs: parseInt(env('DEEPSEEK_TIMEOUT_MS', '90000')!, 10),
     maxRetries: parseInt(env('DEEPSEEK_MAX_RETRIES', '1')!, 10),
   },
+
+  claim_parsing: {
+    role: 'claim_parsing',
+    provider: 'deepseek',
+    apiMode: 'chat_completions',
+    model: deepSeekModel('DEEPSEEK_FAST_MODEL', 'deepseek-v4-flash'),
+    stream: false,
+    skill: 'claim-parsing',
+    promptVersion: 'claim-parsing.prompt-contract.v1',
+    timeoutMs: parseInt(env('DEEPSEEK_TIMEOUT_MS', '90000')!, 10),
+    maxRetries: parseInt(env('DEEPSEEK_MAX_RETRIES', '1')!, 10),
+  },
+
+  claim_review: {
+    role: 'claim_review',
+    provider: 'deepseek',
+    apiMode: 'chat_completions',
+    model: deepSeekModel('DEEPSEEK_FAST_MODEL', 'deepseek-v4-flash'),
+    stream: false,
+    skill: 'claim-review',
+    promptVersion: 'claim-review.prompt-contract.v1',
+    timeoutMs: parseInt(env('DEEPSEEK_TIMEOUT_MS', '90000')!, 10),
+    maxRetries: parseInt(env('DEEPSEEK_MAX_RETRIES', '1')!, 10),
+  },
 };
 
 export function getDeepseekRoute(role: string): ModelRoute | undefined {

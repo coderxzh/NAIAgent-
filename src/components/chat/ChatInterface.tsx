@@ -4,9 +4,11 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Conversation,
   ConversationContent,
+  ConversationScrollButton,
 } from '@/components/ai-elements/conversation';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppState } from '@/context/AppStateContext';
+import { useStreamingText } from '@/hooks/use-streaming-text';
 import { chatService } from '@/services/chatService';
 import { projectService } from '@/services/projectService';
 import { agentTaskApi } from '@/lib/electron-api';
@@ -15,7 +17,9 @@ import type { UploadedFile, ChatMessage as UiChatMessage } from '@/lib/file-uplo
 import type { ChatSession } from '@/types/domain';
 import WelcomeScreen from './WelcomeScreen';
 import EmptyChatState from './EmptyChatState';
-import MessageList from './MessageList';
+import ChatMessages from './ChatMessages';
+import AgentTaskProgress from './AgentTaskProgress';
+import ThinkingIndicator from './ThinkingIndicator';
 import ChatInput from './ChatInput';
 import ChatHistoryDrawer from './ChatHistoryDrawer';
 import { Button } from '@/components/ui/button';
@@ -65,8 +69,21 @@ export default function ChatInterface({
   const [messages, setMessages] = useState<UiChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+
+  const { displayText, isStreaming: isRevealing, start, stop: stopReveal, reset } = useStreamingText();
+
+  useEffect(() => {
+    if (!streamingMessageId) return;
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === streamingMessageId ? { ...m, content: displayText } : m,
+      ),
+    );
+  }, [displayText, streamingMessageId]);
 
   const [internalFiles, setInternalFiles] = useState<UploadedFile[]>([]);
   const [internalProject, setInternalProject] = useState('');
@@ -199,6 +216,21 @@ export default function ChatInterface({
   const generateResponse = useCallback(
     async (sessionId: number, userContent: string) => {
       setIsLoading(true);
+      setActiveTaskId(null);
+      reset();
+
+      const assistantId = `assistant_${Date.now()}`;
+      const assistantMessage: UiChatMessage = {
+        id: assistantId,
+        role: 'assistant',
+        content: '',
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+      setStreamingMessageId(assistantId);
+
+      let answer = 'Agent 未返回有效回答';
+      let taskId: number | null = null;
+
       try {
         const task = await agentTaskApi.run({
           sessionId: sessionId,
@@ -207,10 +239,12 @@ export default function ChatInterface({
           userGoal: userContent,
         });
 
-        let answer = 'Agent 未返回有效回答';
+        taskId = task.id;
+        setActiveTaskId(taskId);
+
         if (task.status === 'completed') {
           const artifacts = await agentTaskApi.artifacts(task.id);
-          const responseArtifact = (artifacts as Array<{artifact_type: string; content: string}>).find(
+          const responseArtifact = (artifacts as Array<{ artifact_type: string; content: string }>).find(
             (a) => a.artifact_type === 'agent_response',
           );
           answer = responseArtifact?.content ?? answer;
@@ -218,20 +252,42 @@ export default function ChatInterface({
           answer = task.current_objective ?? '任务执行失败';
         }
 
-        const reply: UiChatMessage = {
-          id: `assistant_${Date.now()}`,
-          role: 'assistant',
-          content: answer,
-        };
+        start(answer, async () => {
+          await saveMessage(sessionId, 'assistant', answer);
+          setIsLoading(false);
+          setStreamingMessageId(null);
+          setActiveTaskId(null);
+        });
+      } catch {
+        answer = '请求失败，请稍后重试';
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, content: answer } : m,
+          ),
+        );
         await saveMessage(sessionId, 'assistant', answer);
-
-        setMessages((prev) => [...prev, reply]);
-      } finally {
         setIsLoading(false);
+        setStreamingMessageId(null);
+        setActiveTaskId(null);
       }
     },
-    [currentProject, saveMessage],
+    [currentProject, saveMessage, start, reset],
   );
+
+  const finalizeStreaming = useCallback(async () => {
+    stopReveal();
+    setIsLoading(false);
+    setStreamingMessageId(null);
+    setActiveTaskId(null);
+
+    if (!currentChatSession) return;
+    const assistantMessage = messages.find(
+      (m) => m.id === streamingMessageId,
+    );
+    if (assistantMessage?.content) {
+      await saveMessage(currentChatSession.id, 'assistant', assistantMessage.content);
+    }
+  }, [currentChatSession, messages, saveMessage, stopReveal, streamingMessageId]);
 
   const handleSubmit = useCallback(
     async (message: { text: string; files: unknown[] }) => {
@@ -381,7 +437,7 @@ export default function ChatInterface({
 
   return (
     <div className="relative flex flex-col h-full w-full">
-      <div className="flex items-center gap-2 pb-2">
+      <div className="absolute top-4 left-2 z-20 flex items-center gap-1">
         <Button
           variant="ghost"
           size="sm"
@@ -410,23 +466,26 @@ export default function ChatInterface({
           </Button>
         </ChatHistoryDrawer>
       </div>
-      <div className="flex flex-col h-full w-full max-w-4xl mx-auto">
-        <div
-          className="flex-1 min-h-0 overflow-y-auto w-full flex flex-col"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {showWelcome ? (
-            <WelcomeScreen onSuggestionSelect={handleSuggestionSelect} />
-          ) : messages.length === 0 ? (
-            <EmptyChatState />
-          ) : (
-            <Conversation>
-              <ConversationContent>
-                <MessageList messages={messages} isLoading={isLoading} />
-              </ConversationContent>
-            </Conversation>
-          )}
-        </div>
+      <div className="flex flex-col flex-1 min-h-0 w-full max-w-4xl mx-auto">
+        <Conversation>
+          <ConversationContent className="w-full max-w-3xl mx-auto gap-4 pt-12">
+            {showWelcome ? (
+              <WelcomeScreen onSuggestionSelect={handleSuggestionSelect} />
+            ) : messages.length === 0 ? (
+              <EmptyChatState />
+            ) : (
+              <ChatMessages messages={messages} />
+            )}
+            {isLoading && !isRevealing && <ThinkingIndicator />}
+            {activeTaskId && (
+              <AgentTaskProgress
+                taskId={activeTaskId}
+                onDone={() => setActiveTaskId(null)}
+              />
+            )}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
 
         <div className="w-full shrink-0 pt-1 pb-2">
           <ChatInput
@@ -437,7 +496,8 @@ export default function ChatInterface({
             onFileUpload={handleFileUpload}
             onRemoveFile={handleRemoveFile}
             isLoading={isLoading}
-            onStop={() => setIsLoading(false)}
+            isStreaming={isRevealing}
+            onStop={finalizeStreaming}
             selectedProject={selectedProject}
             onProjectChange={handleProjectChange}
             projectList={projectList}

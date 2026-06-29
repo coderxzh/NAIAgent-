@@ -2,6 +2,10 @@ import type {
   AgentArtifact,
   AgentTask,
   AgentTaskStep,
+  ArticleArtifactMeta,
+  ArticleClaim,
+  ArticleClaimSource,
+  ArticleReview,
   ChatMessage,
   EnterpriseFact,
   FactReviewIntent,
@@ -12,6 +16,10 @@ import type {
   ToolApproval,
   VisibilityCheck,
 } from '@/types/domain';
+
+import type {FactExtractionResult} from '../services/facts/factTypes.ts';
+import type {ClaimReviewResult} from '../services/article/claimReviewService.ts';
+import type {GeoReviewResult} from '../services/article/geoReviewService.ts';
 
 interface IndexingResult {
   entryId: number;
@@ -30,8 +38,6 @@ interface KnowledgeSearchResult {
   sourceType: string | null;
   sourceFilePath: string | null;
 }
-
-import type {FactExtractionResult} from '../services/facts/factTypes.ts';
 
 interface RagAnswer {
   answer: string;
@@ -198,6 +204,32 @@ export interface IpcChannels {
   'reflection:approve': (id: number) => void;
   'reflection:reject': (id: number) => void;
   'reflection:archive': (id: number) => void;
+
+  // 文章生成
+  'article:generate': (params: {
+    projectId: number;
+    strategy: 'support_article';
+    supportArticleType?: string;
+    targetQuestion: string;
+    title?: string;
+  }) => {artifact: AgentArtifact; meta: ArticleArtifactMeta; claims: ArticleClaim[]};
+
+  'article:list': (projectId: number) => Array<{artifact: AgentArtifact; meta: ArticleArtifactMeta}>;
+
+  'article:get': (artifactId: number) => {
+    artifact: AgentArtifact;
+    meta: ArticleArtifactMeta;
+    claims: Array<ArticleClaim & {sources: ArticleClaimSource[]}>;
+    reviews: ArticleReview[];
+  };
+
+  'article:claimReview': (artifactId: number) => ClaimReviewResult;
+  'article:geoReview': (artifactId: number) => GeoReviewResult;
+  'article:updateStatus': (
+    artifactId: number,
+    status: 'draft' | 'claim_reviewed' | 'geo_reviewed' | 'approved' | 'rejected',
+  ) => void;
+  'article:updateContent': (artifactId: number, content: string) => void;
 
   // 窗口
   'window:minimize': () => void;

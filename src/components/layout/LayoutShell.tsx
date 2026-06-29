@@ -5,6 +5,7 @@ import { useView } from '../../context/ViewContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import TitleBar from './TitleBar';
+import { Menu } from 'lucide-react';
 
 interface LayoutShellProps {
   children: React.ReactNode;
@@ -15,6 +16,8 @@ export default function LayoutShell({ children }: LayoutShellProps) {
   const { activeView, navigateTo } = useView();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isAiAgent = activeView === 'aiAgent';
 
   return (
     <div className={cn('h-[100dvh] w-full flex flex-col transition-colors duration-300', cls('bg-[#f4f4f5] text-[#191c1e]', 'bg-[#09090b] text-white'))}>
@@ -28,8 +31,29 @@ export default function LayoutShell({ children }: LayoutShellProps) {
           mobileOpen={mobileOpen}
           onCloseMobile={() => setMobileOpen(false)}
         />
-        <div className={cn('flex-1 flex flex-col pt-4 lg:pt-6 px-6 lg:px-12 w-full min-w-0 transition-colors', activeView === 'aiAgent' ? 'overflow-hidden pb-5 lg:pb-8' : 'overflow-y-auto pb-6 lg:pb-12', cls('bg-white', 'bg-[#131316]'))}>
-          <Header onOpenMobileMenu={() => setMobileOpen(true)} />
+        <div
+          className={cn(
+            'flex-1 flex flex-col relative w-full min-w-0 transition-colors',
+            isAiAgent
+              ? 'overflow-hidden px-2 lg:px-4 pt-0 pb-5 lg:pb-8'
+              : 'overflow-y-auto px-6 lg:px-12 pt-4 lg:pt-6 pb-6 lg:pb-12',
+            cls('bg-white', 'bg-[#131316]'),
+          )}
+        >
+          {isAiAgent ? (
+            <button
+              onClick={() => setMobileOpen(true)}
+              aria-label="打开菜单"
+              className={cn(
+                'xl:hidden absolute top-2 right-2 z-20 p-2 rounded-lg',
+                cls('hover:bg-gray-100 text-gray-600', 'hover:bg-[#3f3f46] text-gray-300'),
+              )}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          ) : (
+            <Header onOpenMobileMenu={() => setMobileOpen(true)} />
+          )}
           {children}
         </div>
       </div>
